@@ -191,7 +191,7 @@ jobs:
           content="${{ steps.test_9_special_chars.outputs.changelog_content }}"
           echo "Test 9: Checking special characters"
           echo "$content" | grep -q "quoted" || exit 1
-          echo "$content" | grep -q "code" || exit 1
+          echo "$content" | grep -qE '\`code\`' || exit 1
           echo "$content" | grep -q "https://example.com" || exit 1
 
       # Test 10: Date format YYYY-MM-DD
