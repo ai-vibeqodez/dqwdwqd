@@ -10,16 +10,98 @@ jobs:
       version: ${{ steps.resolve.outputs.version }}
       release_notes: ${{ steps.resolve.outputs.release_notes }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - id: resolve
+        shell: python
         run: |
-          echo "version=0.1.1" >> "$GITHUB_OUTPUT"
-          {
-            echo "release_notes<<EOF"
-            echo "### Changed"
-            echo ""
-            echo "- Maintenance release"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          from pathlib import Path
+          import os
+          import re
+          import subprocess
+
+          def git(*args: str) -> str:
+              res = subprocess.run(["git", *args], capture_output=True, text=True)
+              return res.stdout if res.returncode == 0 else ""
+
+          def parse_semver(text: str) -> tuple[int, int, int] | None:
+              if m := re.match(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$", text.strip()):
+                  return int(m.group(1)), int(m.group(2)), int(m.group(3))
+              return None
+
+          # 1. Ищем последний валидный тег vX.Y.Z в текущей ветке
+          raw_tags = git("tag", "--merged", "HEAD", "--sort=-v:refname")
+          latest_tag = None
+          tag_ver = (0, 0, 0)
+          for line in raw_tags.splitlines():
+              tag = line.strip()
+              if tag.startswith("v") and (parsed := parse_semver(tag.removeprefix("v"))):
+                  latest_tag = tag
+                  tag_ver = parsed
+                  break
+
+          # 2. Ищем последнюю версию в CHANGELOG.md (если файл есть)
+          changelog_ver = (0, 0, 0)
+          changelog_path = Path("CHANGELOG.md")
+          if changelog_path.is_file():
+              for line in changelog_path.read_text(encoding="utf-8", errors="replace").splitlines():
+                  if m := re.match(r"^## \[([^\]]+)\]", line):
+                      if parsed := parse_semver(m.group(1)):
+                          changelog_ver = parsed
+                          break
+
+          # Берем максимальную версию из Git и CHANGELOG.md
+          major, minor, patch = max(tag_ver, changelog_ver)
+
+          # 3. Получаем коммиты от последнего тега до HEAD
+          rev_range = f"{latest_tag}..HEAD" if latest_tag else "HEAD"
+          commits = git("log", rev_range, "--no-merges", "--pretty=format:%s").splitlines()
+
+          type_map = {
+              "feat": "Added",
+              "fix": "Fixed",
+              "refactor": "Changed",
+              "perf": "Changed",
+              "deprecate": "Deprecated",
+              "remove": "Removed",
+              "revert": "Removed",
+              "security": "Security",
+          }
+          sections = {k: [] for k in ("Breaking", "Added", "Changed", "Deprecated", "Removed", "Fixed", "Security")}
+
+          for line in commits:
+              if m := re.match(r"^(?P<type>[a-z]+)(?:\([^)]*\))?(?P<bang>!)?:\s*(?P<desc>.+)$", line.strip(), re.I):
+                  desc = m["desc"].strip()
+                  if m["bang"] or "BREAKING CHANGE" in line:
+                      sections["Breaking"].append(desc)
+                  elif cat := type_map.get(m["type"].lower()):
+                      sections[cat].append(desc)
+
+          # 4. Если новых коммитов нет или они не попали в категории -> PATCH + 1
+          if not any(sections.values()):
+              sections["Changed"].append("Maintenance release")
+
+          if sections["Breaking"]:
+              next_version = f"{major + 1}.0.0"
+          elif sections["Added"]:
+              next_version = f"{major}.{minor + 1}.0"
+          else:
+              next_version = f"{major}.{minor}.{patch + 1}"
+
+          release_notes = "\n\n".join(
+              f"### {cat}\n\n" + "\n".join(f"- {i}" for i in items)
+              for cat, items in sections.items()
+              if items
+          )
+
+          print(f"Resolved version: {next_version}")
+          print(f"Release notes:\n{release_notes}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write(f"version={next_version}\n")
+              f.write(f"release_notes<<EOF\n{release_notes}\nEOF\n")
 
   build:
     needs: resolve_version
@@ -36,7 +118,7 @@ jobs:
           name: release-artifacts
           path: dist/
 
-  publish_release:
+  publish:
     needs: [resolve_version, build]
     runs-on: ubuntu-latest
     permissions:
