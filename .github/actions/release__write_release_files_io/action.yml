@@ -42,13 +42,16 @@ runs:
     
     - id: write
       shell: python
+      env:
+        JSON_OUTPUT: ${{ steps.render.outputs.json_output }}
       run: |
         import json
         import sys
+        import os
         
-        # Parse pure action output (JSON from GITHUB_OUTPUT)
-        output_json = r"""${{ steps.render.outputs.json_output }}"""
-        if not output_json or output_json.startswith("${{"):
+        # Parse pure action output (JSON from env var)
+        output_json = os.environ.get("JSON_OUTPUT", "")
+        if not output_json:
           print("ERROR: json_output not available", file=sys.stderr)
           sys.exit(1)
         
@@ -69,6 +72,7 @@ runs:
         
         print(f"✓ Updated VERSION")
         print(f"✓ Updated CHANGELOG.md")
+
 
 
 
