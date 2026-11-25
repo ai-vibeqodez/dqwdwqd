@@ -26,14 +26,24 @@ def find_changelog_version(changelog_text: str) -> tuple[int, int, int]:
 
 
 def parse_commits(commits_str: str) -> list[str]:
-    """Parse commits: split by double newlines to handle multiline commit messages."""
-    # Split by double newlines first (body separator), then by single newlines for compatibility
-    if "\n\n" in commits_str:
-        blocks = commits_str.split("\n\n")
-        return [block.strip() for block in blocks if block.strip()]
-    else:
-        # Single-line format: each line is a commit
-        return [line.strip() for line in commits_str.splitlines() if line.strip()]
+    """Parse commits: split by double newlines to handle multiline commit messages.
+    
+    Handles:
+    - Multiple commits separated by blank lines (from git log)
+    - Single multiline commits with BREAKING CHANGE in body
+    - Literal \\n from GitHub Actions env vars
+    """
+    if not commits_str:
+        return []
+    
+    # First normalize: replace literal \n (from env vars) with actual newlines
+    commits_str = commits_str.replace("\\n", "\n")
+    
+    # Split by double newlines or by blank lines
+    # This separates complete commit messages from each other
+    commits_list = re.split(r'\n\n+', commits_str)
+    
+    return [commit.strip() for commit in commits_list if commit.strip()]
 
 
 def compute_release(
@@ -60,13 +70,16 @@ def compute_release(
     parsed_commits = parse_commits(commits_str)
 
     for commit_msg in parsed_commits:
+        # Check for BREAKING CHANGE anywhere in the commit (subject or body)
+        is_breaking = "BREAKING CHANGE" in commit_msg
+        
         # Get first line (subject) for regex matching
         first_line = commit_msg.split("\n")[0]
         
         if m := re.match(r"^(?P<type>[a-z]+)(?:\([^)]*\))?(?P<bang>!)?:\s*(?P<desc>.+)$", first_line.strip(), re.I):
             desc = m["desc"].strip()
-            # Check entire commit message (including body) for BREAKING CHANGE
-            if m["bang"] or "BREAKING CHANGE" in commit_msg:
+            # Check for breaking: either ! in commit or BREAKING CHANGE in body
+            if m["bang"] or is_breaking:
                 sections["Breaking"].append(desc)
             elif cat := type_map.get(m["type"].lower()):
                 sections[cat].append(desc)
