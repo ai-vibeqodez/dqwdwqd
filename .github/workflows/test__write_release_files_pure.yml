@@ -188,12 +188,15 @@ jobs:
       
       - name: Verify test_9_special_chars
         run: |
+          cat > /tmp/verify_test9.sh << 'SCRIPT_EOF'
           content="${{ steps.test_9_special_chars.outputs.changelog_content }}"
           echo "Test 9: Checking special characters"
           echo "$content" | grep -q "quoted" || exit 1
           echo "$content" | grep -q "Support for" || exit 1
           echo "$content" | grep -q "elements" || exit 1
           echo "$content" | grep -q "https://example.com" || exit 1
+          SCRIPT_EOF
+          bash /tmp/verify_test9.sh
 
       # Test 10: Date format YYYY-MM-DD
       - id: test_10_date_format
