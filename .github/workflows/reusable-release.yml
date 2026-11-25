@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  workflow_call:
+
+jobs:
+  resolve_version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      release_notes: ${{ steps.resolve.outputs.release_notes }}
+    steps:
+      - id: resolve
+        run: |
+          echo "version=0.1.1" >> "$GITHUB_OUTPUT"
+          {
+            echo "release_notes<<EOF"
+            echo "### Changed"
+            echo ""
+            echo "- Maintenance release"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: resolve_version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Project (Stub)
+        run: |
+          echo "Building version ${{ needs.resolve_version.outputs.version }}"
+          mkdir -p dist
+          echo "dummy binary" > dist/app-linux-x64.bin
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: dist/
+
+  publish_release:
+    needs: [resolve_version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Update VERSION and CHANGELOG.md (Stub)
+        run: |
+          echo "VERSION=${{ needs.resolve_version.outputs.version }}"
+          echo "${{ needs.resolve_version.outputs.release_notes }}"
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: dist/
+
+      - name: Commit, Tag, Push & Create GitHub Release (Stub)
+        run: |
+          echo "git commit -m 'chore(release): ${{ needs.resolve_version.outputs.version }}'"
+          echo "git tag -a v${{ needs.resolve_version.outputs.version }}"
+          echo "git push origin HEAD --follow-tags"
+          echo "gh release create v${{ needs.resolve_version.outputs.version }} dist/*"
+          ls -la dist/

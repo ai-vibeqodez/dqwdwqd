@@ -1,0 +1,11 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/release.yml@main
