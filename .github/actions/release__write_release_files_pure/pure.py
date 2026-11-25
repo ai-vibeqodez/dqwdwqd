@@ -53,7 +53,6 @@ def apply_line_ending(content: str, preserve_crlf: bool) -> str:
 
 
 if __name__ == "__main__":
-    import sys
     import json
     
     existing_changelog = os.environ.get("INPUT_EXISTING_CHANGELOG", "")
@@ -61,23 +60,23 @@ if __name__ == "__main__":
     release_notes = os.environ.get("INPUT_RELEASE_NOTES", "").strip()
     release_date = os.environ.get("INPUT_RELEASE_DATE", "").strip()
     preserve_crlf = os.environ.get("INPUT_PRESERVE_CRLF", "false").lower() == "true"
-
+    
     # Normalize input: replace literal \n with actual newlines
     existing_changelog = existing_changelog.replace("\\n", "\n")
     release_notes = release_notes.replace("\\n", "\n")
-
-    # Render changelog (pure computation, no side effects)
+    
+    # Render changelog (pure function)
     updated_changelog = render_updated_changelog(
         existing_changelog,
         version,
         release_notes,
         release_date,
     )
-
+    
     # Apply line endings
     changelog_output = apply_line_ending(updated_changelog, preserve_crlf)
     version_output = apply_line_ending(f"{version}\n", preserve_crlf)
-
+    
     # Create output object
     output = {
         "version": version_output.strip(),

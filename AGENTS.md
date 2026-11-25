@@ -123,24 +123,33 @@ echo "$content" | grep -q "elements" || exit 1
 
 ### Output Handling
 
-#### Multiline outputs
-Use `<<EOF` delimiter:
-```bash
-if [ -n "$GITHUB_OUTPUT" ]; then
-    echo "changelog_content<<EOF" >> $GITHUB_OUTPUT
-    echo "$MULTILINE_VALUE" >> $GITHUB_OUTPUT
-    echo "EOF" >> $GITHUB_OUTPUT
-fi
-```
+#### JSON output pattern (pure actions)
+Pure actions output a single JSON object to avoid multiline delimiter issues:
 
-#### Export from Python action
 ```python
+# Python pure action
+output = {
+    "version": version,
+    "changelog": changelog_content,
+    # or "release_notes": notes
+}
+
+json_str = json.dumps(output, ensure_ascii=False)
+
 if gh_out := os.environ.get("GITHUB_OUTPUT"):
     with open(gh_out, "a", encoding="utf-8") as f:
-        f.write("changelog_content<<EOF\n")
-        f.write(updated_content)
-        f.write("EOF\n")
-        f.write(f"version={version}\n")
+        f.write(f"json_output={json_str}\n")
+```
+
+**Advantage:** single-line JSON avoids EOF delimiter parsing issues with special characters.
+
+#### Parsing in workflows (using jq)
+```yaml
+- name: Extract from JSON output
+  run: |
+    json='${{ steps.my_pure_action.outputs.json_output }}'
+    version=$(echo "$json" | jq -r '.version')
+    changelog=$(echo "$json" | jq -r '.changelog')
 ```
 
 ### Versioning in uses
@@ -302,7 +311,8 @@ Pure functions are fully deterministic and testable in isolation:
 
 - name: Verify test_case_name
   run: |
-    version="${{ steps.test_case_name.outputs.version }}"
+    json='${{ steps.test_case_name.outputs.json_output }}'
+    version=$(echo "$json" | jq -r '.version')
     echo "Expected: 1.3.0, Got: $version"
     [[ "$version" == "1.3.0" ]] || exit 1
 ```

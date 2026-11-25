@@ -145,17 +145,13 @@ def resolve_next_release_pure(raw_tags: str, changelog_text: str, commits: str) 
 
 
 if __name__ == "__main__":
+    import json
+    
     raw_tags = os.environ.get("INPUT_RAW_TAGS", "")
     changelog_text = os.environ.get("INPUT_CHANGELOG_TEXT", "")
     commits = os.environ.get("INPUT_COMMITS", "")
     
-    # Debug: log what we received
-    import sys
-    parsed = parse_commits(commits)
-    print(f"DEBUG: received {len(commits)} chars, parsed {len(parsed)} commits", file=sys.stderr)
-    for i, c in enumerate(parsed[:3]):
-        print(f"  commit[{i}]: {c[:60]}...", file=sys.stderr)
-    
+    # Compute next release (pure function)
     ver, notes = resolve_next_release_pure(raw_tags, changelog_text, commits)
     
     # Create output object
