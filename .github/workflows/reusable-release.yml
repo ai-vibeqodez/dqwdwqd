@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0
 
       - id: resolve
-        uses: ai-vibeqodez/dqwdwqd/.github/actions/release__io_resolve_next_release@main
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/release__resolve_next_release_io@main
 
   build:
     needs: resolve_version
