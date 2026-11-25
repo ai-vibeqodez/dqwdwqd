@@ -26,24 +26,27 @@ def find_changelog_version(changelog_text: str) -> tuple[int, int, int]:
 
 
 def parse_commits(commits_str: str) -> list[str]:
-    """Parse commits: split by double newlines to handle multiline commit messages.
+    """Parse commits: handle both single-line and multiline formats.
     
-    Handles:
-    - Multiple commits separated by blank lines (from git log)
-    - Single multiline commits with BREAKING CHANGE in body
-    - Literal \\n from GitHub Actions env vars
+    Cases:
+    1. Multiple single-line commits (each line is a commit): 'feat: A\nfeat: B\nfeat: C'
+    2. Multiline commits (separated by blank lines): 'feat: A\n\nBREAKING CHANGE: ...\n\nfeat: B'
+    3. Literal \\n from GitHub Actions env vars
     """
     if not commits_str:
         return []
     
-    # First normalize: replace literal \n (from env vars) with actual newlines
+    # Normalize: replace literal \n (from env vars) with actual newlines
     commits_str = commits_str.replace("\\n", "\n")
     
-    # Split by double newlines or by blank lines
-    # This separates complete commit messages from each other
-    commits_list = re.split(r'\n\n+', commits_str)
-    
-    return [commit.strip() for commit in commits_list if commit.strip()]
+    # Check if we have multiline commits (separated by blank lines)
+    if "\n\n" in commits_str:
+        # Split by double newlines for multiline commits with bodies
+        commits_list = re.split(r'\n\n+', commits_str)
+        return [commit.strip() for commit in commits_list if commit.strip()]
+    else:
+        # Each line is a separate single-line commit (normal git log format)
+        return [line.strip() for line in commits_str.splitlines() if line.strip()]
 
 
 def compute_release(
@@ -124,6 +127,13 @@ if __name__ == "__main__":
     raw_tags = os.environ.get("INPUT_RAW_TAGS", "")
     changelog_text = os.environ.get("INPUT_CHANGELOG_TEXT", "")
     commits = os.environ.get("INPUT_COMMITS", "")
+    
+    # Debug: log what we received
+    import sys
+    parsed = parse_commits(commits)
+    print(f"DEBUG: received {len(commits)} chars, parsed {len(parsed)} commits", file=sys.stderr)
+    for i, c in enumerate(parsed[:3]):
+        print(f"  commit[{i}]: {c[:60]}...", file=sys.stderr)
     
     ver, notes = resolve_next_release_pure(raw_tags, changelog_text, commits)
     
