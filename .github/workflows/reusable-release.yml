@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0
 
       - id: resolve
-        uses: ai-vibeqodez/dqwdwqd/.github/actions/resolve_next_release@main
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/release__resolve_next_release@main
 
   build:
     needs: resolve_version
@@ -43,7 +43,7 @@ jobs:
           fetch-depth: 0
 
       - name: Update VERSION and CHANGELOG.md
-        uses: ai-vibeqodez/dqwdwqd/.github/actions/write_release_files@main
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/release__write_release_files@main
         with:
           version: ${{ needs.resolve_version.outputs.version }}
           release_notes: ${{ needs.resolve_version.outputs.release_notes }}
