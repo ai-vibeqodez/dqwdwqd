@@ -1,0 +1,15 @@
+name: 'write_release_files'
+description: 'Updates VERSION and prepends release section to CHANGELOG.md'
+inputs:
+  version:
+    required: true
+  release_notes:
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - shell: bash
+      env:
+        RELEASE_VERSION: ${{ inputs.version }}
+        RELEASE_NOTES: ${{ inputs.release_notes }}
+      run: python3 "${{ github.action_path }}/write_release_files.py"
