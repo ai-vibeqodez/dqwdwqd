@@ -20,7 +20,7 @@ jobs:
       
       - name: Verify test_1_empty_changelog
         run: |
-          content="${{ steps.test_1_empty_release.outputs.changelog_content }}"
+          content="${{ steps.test_1_empty_changelog.outputs.changelog_content }}"
           echo "Test 1: Checking for default header"
           echo "$content" | grep -q "# Changelog" || exit 1
           echo "$content" | grep -q "Keep a Changelog" || exit 1
