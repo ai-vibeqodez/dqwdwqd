@@ -12,4 +12,4 @@ runs:
       env:
         RELEASE_VERSION: ${{ inputs.version }}
         RELEASE_NOTES: ${{ inputs.release_notes }}
-      run: python3 "${{ github.action_path }}/write_release_files.py"
+      run: python3 "${{ github.action_path }}/main.py"
