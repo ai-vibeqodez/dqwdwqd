@@ -84,11 +84,10 @@ if __name__ == "__main__":
         "changelog": changelog_output
     }
     
-    # Write to GITHUB_OUTPUT as single-line JSON
+    # Prepare JSON output
+    json_str = json.dumps(output, ensure_ascii=False)
+    
+    # Write to GITHUB_OUTPUT
     if gh_out := os.environ.get("GITHUB_OUTPUT"):
-        json_str = json.dumps(output, ensure_ascii=False)
         with open(gh_out, "a", encoding="utf-8") as f:
             f.write(f"json_output={json_str}\n")
-    else:
-        # Fallback: print to stdout if GITHUB_OUTPUT not available
-        print(json.dumps(output, ensure_ascii=False), flush=True)

@@ -12,10 +12,9 @@ inputs:
     required: true
     default: ''
 outputs:
-  version:
-    value: ${{ steps.resolve.outputs.version }}
-  release_notes:
-    value: ${{ steps.resolve.outputs.release_notes }}
+  json_output:
+    value: ${{ steps.resolve.outputs.json_output }}
+    description: 'JSON object with version and release_notes fields'
 runs:
   using: 'composite'
   steps:

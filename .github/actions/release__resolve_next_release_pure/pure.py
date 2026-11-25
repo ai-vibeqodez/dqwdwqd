@@ -158,7 +158,16 @@ if __name__ == "__main__":
     
     ver, notes = resolve_next_release_pure(raw_tags, changelog_text, commits)
     
+    # Create output object
+    output = {
+        "version": ver,
+        "release_notes": notes
+    }
+    
+    # Prepare JSON output
+    json_str = json.dumps(output, ensure_ascii=False)
+    
+    # Write to GITHUB_OUTPUT
     if gh_out := os.environ.get("GITHUB_OUTPUT"):
         with open(gh_out, "a", encoding="utf-8") as f:
-            f.write(f"version={ver}\n")
-            f.write(f"release_notes<<EOF\n{notes}\nEOF\n")
+            f.write(f"json_output={json_str}\n")
