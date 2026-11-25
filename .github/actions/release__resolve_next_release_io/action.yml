@@ -28,7 +28,7 @@ runs:
         echo "EOF" >> $GITHUB_OUTPUT
     
     - id: pure
-      uses: ai-vibeqodez/dqwdwqd/.github/actions/release__resolve_next_release_pure
+      uses: ai-vibeqodez/dqwdwqd/.github/actions/release__resolve_next_release_pure@main
       with:
         raw_tags: ${{ steps.collect.outputs.raw_tags }}
         changelog_text: ${{ steps.collect.outputs.changelog_text }}

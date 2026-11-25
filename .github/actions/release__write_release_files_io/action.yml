@@ -38,7 +38,7 @@ runs:
         echo "preserve_crlf=$HAS_CRLF" >> $GITHUB_OUTPUT
     
     - id: render
-      uses: ai-vibeqodez/dqwdwqd/.github/actions/release__write_release_files_pure
+      uses: ai-vibeqodez/dqwdwqd/.github/actions/release__write_release_files_pure@main
       with:
         existing_changelog_content: ${{ steps.collect.outputs.changelog_content }}
         version: ${{ inputs.version }}
