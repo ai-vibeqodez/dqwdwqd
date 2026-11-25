@@ -44,7 +44,8 @@ jobs:
       
       - name: Verify test_2_insert_before_existing
         run: |
-          content="${{ steps.test_2_insert_before_existing.outputs.changelog_content }}"
+          json='${{ steps.test_2_insert_before_existing.outputs.json_output }}'
+          content=$(echo "$json" | jq -r '.changelog')
           echo "Test 2: Checking new release before old release"
           new_pos=$(echo "$content" | grep -n "\[1.0.0\]" | cut -d: -f1)
           old_pos=$(echo "$content" | grep -n "\[0.5.0\]" | cut -d: -f1)
@@ -62,7 +63,8 @@ jobs:
       
       - name: Verify test_3_format_check
         run: |
-          content="${{ steps.test_3_format_check.outputs.changelog_content }}"
+          json='${{ steps.test_3_format_check.outputs.json_output }}'
+          content=$(echo "$json" | jq -r '.changelog')
           echo "Test 3: Checking release format"
           echo "$content" | grep -q "## \[2.1.3\] - 2024-06-15" || exit 1
           echo "$content" | grep -q "Feature A" || exit 1
@@ -84,7 +86,8 @@ jobs:
       
       - name: Verify test_4_multiple_releases
         run: |
-          content="${{ steps.test_4_multiple_releases.outputs.changelog_content }}"
+          json='${{ steps.test_4_multiple_releases.outputs.json_output }}'
+          content=$(echo "$json" | jq -r '.changelog')
           echo "Test 4: Checking release ordering"
           line_2=$(echo "$content" | grep -n "2.0.0" | cut -d: -f1)
           line_1=$(echo "$content" | grep -n "1.0.0" | cut -d: -f1)
@@ -102,8 +105,9 @@ jobs:
       
       - name: Verify test_5_version_output
         run: |
-          version="${{ steps.test_5_version_output.outputs.version_content }}"
-          echo "Test 5: Got version_content=$version, expected=3.2.1"
+          json='${{ steps.test_5_version_output.outputs.json_output }}'
+          version=$(echo "$json" | jq -r '.version')
+          echo "Test 5: Got version=$version, expected=3.2.1"
           [[ "$version" == "3.2.1" ]] || exit 1
 
       # Test 6: Release notes with multiple sections
@@ -130,7 +134,8 @@ jobs:
       
       - name: Verify test_6_multiple_sections
         run: |
-          content="${{ steps.test_6_multiple_sections.outputs.changelog_content }}"
+          json='${{ steps.test_6_multiple_sections.outputs.json_output }}'
+          content=$(echo "$json" | jq -r '.changelog')
           echo "Test 6: Checking multiple sections"
           echo "$content" | grep -q "### Added" || exit 1
           echo "$content" | grep -q "### Fixed" || exit 1
@@ -149,7 +154,8 @@ jobs:
       
       - name: Verify test_7_empty_release_notes
         run: |
-          content="${{ steps.test_7_empty_release_notes.outputs.changelog_content }}"
+          json='${{ steps.test_7_empty_release_notes.outputs.json_output }}'
+          content=$(echo "$json" | jq -r '.changelog')
           echo "Test 7: Checking empty notes"
           echo "$content" | grep -q "\[1.0.0\]" || exit 1
 
@@ -167,7 +173,8 @@ jobs:
       
       - name: Verify test_8_first_release
         run: |
-          content="${{ steps.test_8_first_release.outputs.changelog_content }}"
+          json='${{ steps.test_8_first_release.outputs.json_output }}'
+          content=$(echo "$json" | jq -r '.changelog')
           echo "Test 8: Checking first release append"
           echo "$content" | grep -q "\[1.0.0\]" || exit 1
           echo "$content" | grep -q "All notable changes" || exit 1
@@ -188,7 +195,8 @@ jobs:
       
       - name: Verify test_9_special_chars
         run: |
-          content="${{ steps.test_9_special_chars.outputs.changelog_content }}"
+          json='${{ steps.test_9_special_chars.outputs.json_output }}'
+          content=$(echo "$json" | jq -r '.changelog')
           echo "Test 9: Checking special characters"
           echo "$content" | grep -q "quoted" || exit 1
           echo "$content" | grep -q "Support for" || exit 1
@@ -206,7 +214,8 @@ jobs:
       
       - name: Verify test_10_date_format
         run: |
-          content="${{ steps.test_10_date_format.outputs.changelog_content }}"
+          json='${{ steps.test_10_date_format.outputs.json_output }}'
+          content=$(echo "$json" | jq -r '.changelog')
           echo "Test 10: Checking date format"
           echo "$content" | grep -q "2024-12-25" || exit 1
 
@@ -232,7 +241,8 @@ jobs:
       
       - name: Verify test_11_preserve_header
         run: |
-          content="${{ steps.test_11_preserve_header.outputs.changelog_content }}"
+          json='${{ steps.test_11_preserve_header.outputs.json_output }}'
+          content=$(echo "$json" | jq -r '.changelog')
           echo "Test 11: Checking header preservation"
           echo "$content" | grep -q "Keep a Changelog" || exit 1
           echo "$content" | grep -q "Semantic Versioning" || exit 1
@@ -257,9 +267,11 @@ jobs:
       
       - name: Verify test_12_spacing
         run: |
-          content="${{ steps.test_12_spacing.outputs.changelog_content }}"
+          json='${{ steps.test_12_spacing.outputs.json_output }}'
+          content=$(echo "$json" | jq -r '.changelog')
           echo "Test 12: Checking spacing between releases"
           echo "$content" | awk '/## \[2.0.0\]/,/## \[1.0.0\]/' | head -n -1 | tail -n +2 | grep -q "^$" || exit 1
+
 
       # Summary
       - name: Test Summary
