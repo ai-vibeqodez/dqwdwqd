@@ -54,6 +54,7 @@ def apply_line_ending(content: str, preserve_crlf: bool) -> str:
 
 if __name__ == "__main__":
     import sys
+    import json
     
     existing_changelog = os.environ.get("INPUT_EXISTING_CHANGELOG", "")
     version = os.environ.get("INPUT_VERSION", "").strip()
@@ -77,11 +78,17 @@ if __name__ == "__main__":
     changelog_output = apply_line_ending(updated_changelog, preserve_crlf)
     version_output = apply_line_ending(f"{version}\n", preserve_crlf)
 
-    # Output to stdout (pure function output, no file writes)
-    # JSON format for safe multiline handling
-    import json
+    # Create output object
     output = {
         "version": version_output.strip(),
         "changelog": changelog_output
     }
-    print(json.dumps(output, ensure_ascii=False), flush=True)
+    
+    # Write to GITHUB_OUTPUT as single-line JSON
+    if gh_out := os.environ.get("GITHUB_OUTPUT"):
+        json_str = json.dumps(output, ensure_ascii=False)
+        with open(gh_out, "a", encoding="utf-8") as f:
+            f.write(f"json_output={json_str}\n")
+    else:
+        # Fallback: print to stdout if GITHUB_OUTPUT not available
+        print(json.dumps(output, ensure_ascii=False), flush=True)

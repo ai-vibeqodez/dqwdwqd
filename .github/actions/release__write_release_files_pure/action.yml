@@ -19,10 +19,9 @@ inputs:
     required: false
     default: 'false'
 outputs:
-  changelog_content:
-    value: ${{ steps.render.outputs.changelog_content }}
-  version_content:
-    value: ${{ steps.render.outputs.version_content }}
+  json_output:
+    value: ${{ steps.render.outputs.json_output }}
+    description: 'JSON object with version and changelog fields'
 runs:
   using: 'composite'
   steps:

@@ -46,12 +46,17 @@ runs:
         import json
         import sys
         
-        # Parse pure action output (JSON from stdout)
-        output_json = """${{ steps.render.outputs.stdout }}"""
+        # Parse pure action output (JSON from GITHUB_OUTPUT)
+        output_json = r"""${{ steps.render.outputs.json_output }}"""
+        if not output_json or output_json.startswith("${{"):
+          print("ERROR: json_output not available", file=sys.stderr)
+          sys.exit(1)
+        
         try:
           output = json.loads(output_json)
-        except:
-          print("ERROR: Failed to parse pure action output", file=sys.stderr)
+        except Exception as e:
+          print(f"ERROR: Failed to parse JSON: {e}", file=sys.stderr)
+          print(f"Input was: {output_json}", file=sys.stderr)
           sys.exit(1)
         
         # Write VERSION
@@ -64,6 +69,7 @@ runs:
         
         print(f"✓ Updated VERSION")
         print(f"✓ Updated CHANGELOG.md")
+
 
 
 
