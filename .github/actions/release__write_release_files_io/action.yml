@@ -28,7 +28,6 @@ runs:
         echo "EOF" >> $GITHUB_OUTPUT
         
         echo "release_date=$RELEASE_DATE" >> $GITHUB_OUTPUT
-        # Always false for now (CRLF preservation can be added later)
         echo "preserve_crlf=false" >> $GITHUB_OUTPUT
     
     - id: render
@@ -43,32 +42,25 @@ runs:
     - id: write
       shell: python
       env:
-        JSON_OUTPUT: ${{ steps.render.outputs.json_output }}
+        JSON_OUTPUT: ${{ fromJson(steps.render.outputs.json_output).changelog }}
+        VERSION_OUTPUT: ${{ fromJson(steps.render.outputs.json_output).version }}
       run: |
-        import json
-        import sys
         import os
         
-        # Parse pure action output (JSON from env var)
-        output_json = os.environ.get("JSON_OUTPUT", "")
-        if not output_json:
-          print("ERROR: json_output not available", file=sys.stderr)
-          sys.exit(1)
+        changelog = os.environ.get("JSON_OUTPUT", "")
+        version = os.environ.get("VERSION_OUTPUT", "")
         
-        try:
-          output = json.loads(output_json)
-        except Exception as e:
-          print(f"ERROR: Failed to parse JSON: {e}", file=sys.stderr)
-          print(f"Input was: {output_json}", file=sys.stderr)
-          sys.exit(1)
+        if not changelog or not version:
+          print("ERROR: Empty output from pure action", file=__import__('sys').stderr)
+          exit(1)
         
         # Write VERSION
         with open("VERSION", "w", encoding="utf-8") as f:
-          f.write(output["version"] + "\n")
+          f.write(version + "\n")
         
         # Write CHANGELOG.md
         with open("CHANGELOG.md", "w", encoding="utf-8") as f:
-          f.write(output["changelog"])
+          f.write(changelog)
         
         print(f"✓ Updated VERSION")
         print(f"✓ Updated CHANGELOG.md")

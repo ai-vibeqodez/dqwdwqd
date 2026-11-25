@@ -2,9 +2,9 @@ name: 'release__resolve_next_release_io'
 description: 'Resolves next SemVer version and release notes from git history and CHANGELOG.md (I/O + pure compute)'
 outputs:
   version:
-    value: ${{ steps.pure.outputs.version }}
+    value: ${{ fromJson(steps.pure.outputs.json_output).version }}
   release_notes:
-    value: ${{ steps.pure.outputs.release_notes }}
+    value: ${{ fromJson(steps.pure.outputs.json_output).release_notes }}
 runs:
   using: 'composite'
   steps:
