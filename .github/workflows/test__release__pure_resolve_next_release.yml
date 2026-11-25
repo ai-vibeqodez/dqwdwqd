@@ -290,9 +290,10 @@ jobs:
         with:
           raw_tags: 'v1.0.0'
           changelog_text: ''
-          commits: 'refactor: restructure module
+          commits: |
+            refactor: restructure module
 
-BREAKING CHANGE: removed old API endpoint'
+            BREAKING CHANGE: removed old API endpoint
       
       - name: Verify test_19_breaking_in_body
         run: |

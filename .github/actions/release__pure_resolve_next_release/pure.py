@@ -30,8 +30,10 @@ def parse_commits(commits_str: str) -> list[str]:
     
     Cases:
     1. Multiple single-line commits (each line is a commit): 'feat: A\nfeat: B\nfeat: C'
-    2. Multiline commits (separated by blank lines): 'feat: A\n\nBREAKING CHANGE: ...\n\nfeat: B'
+    2. Multiline commits (commit + blank line + body): 'feat: A\n\nBREAKING CHANGE: ...\nfeat: B'
     3. Literal \\n from GitHub Actions env vars
+    
+    Returns list of commits where each may be multiline (subject + body).
     """
     if not commits_str:
         return []
@@ -39,14 +41,33 @@ def parse_commits(commits_str: str) -> list[str]:
     # Normalize: replace literal \n (from env vars) with actual newlines
     commits_str = commits_str.replace("\\n", "\n")
     
-    # Check if we have multiline commits (separated by blank lines)
-    if "\n\n" in commits_str:
-        # Split by double newlines for multiline commits with bodies
-        commits_list = re.split(r'\n\n+', commits_str)
-        return [commit.strip() for commit in commits_list if commit.strip()]
-    else:
-        # Each line is a separate single-line commit (normal git log format)
-        return [line.strip() for line in commits_str.splitlines() if line.strip()]
+    # Strategy: look for Conventional Commits pattern at line start (type: or type():)
+    # and group following lines (body) with the commit until next commit or end
+    commits_list = []
+    lines = commits_str.split('\n')
+    current_commit = []
+    
+    for line in lines:
+        line_stripped = line.strip()
+        
+        # Check if this line starts a new conventional commit (type: or type():)
+        if re.match(r'^[a-z]+(?:\([^)]*\))?(?:!)?:', line_stripped, re.I):
+            # Save previous commit if exists
+            if current_commit:
+                commits_list.append('\n'.join(current_commit))
+            # Start new commit
+            current_commit = [line_stripped]
+        elif current_commit:
+            # Add to current commit's body (or skip empty lines)
+            if line_stripped or current_commit[-1]:  # Include empty lines in body, but stop trailing
+                current_commit.append(line_stripped)
+        # else: skip leading empty lines before first commit
+    
+    # Add last commit
+    if current_commit:
+        commits_list.append('\n'.join(current_commit).strip())
+    
+    return [c for c in commits_list if c]
 
 
 def compute_release(
