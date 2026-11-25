@@ -43,7 +43,7 @@ jobs:
           fetch-depth: 0
 
       - name: Update VERSION and CHANGELOG.md
-        uses: ai-vibeqodez/dqwdwqd/.github/actions/release__write_release_files@main
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/release__write_release_files_io@main
         with:
           version: ${{ needs.resolve_version.outputs.version }}
           release_notes: ${{ needs.resolve_version.outputs.release_notes }}
