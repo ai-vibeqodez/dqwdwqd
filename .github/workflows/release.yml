@@ -8,4 +8,4 @@ permissions:
 
 jobs:
   release:
-    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable-release@main
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable-release.yml@main
