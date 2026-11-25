@@ -61,15 +61,11 @@ if __name__ == "__main__":
     release_date = os.environ.get("INPUT_RELEASE_DATE", "").strip()
     preserve_crlf = os.environ.get("INPUT_PRESERVE_CRLF", "false").lower() == "true"
 
-    # Debug
-    print(f"DEBUG: version={version}, date={release_date}, crlf={preserve_crlf}", file=sys.stderr)
-    print(f"DEBUG: notes length={len(release_notes)}, first 50 chars: {release_notes[:50]}", file=sys.stderr)
-
     # Normalize input: replace literal \n with actual newlines
     existing_changelog = existing_changelog.replace("\\n", "\n")
     release_notes = release_notes.replace("\\n", "\n")
 
-    # Render changelog
+    # Render changelog (pure computation, no side effects)
     updated_changelog = render_updated_changelog(
         existing_changelog,
         version,
@@ -81,15 +77,11 @@ if __name__ == "__main__":
     changelog_output = apply_line_ending(updated_changelog, preserve_crlf)
     version_output = apply_line_ending(f"{version}\n", preserve_crlf)
 
-    print(f"DEBUG: changelog length={len(changelog_output)}, version={version_output.strip()}", file=sys.stderr)
-
-    if gh_out := os.environ.get("GITHUB_OUTPUT"):
-        print(f"DEBUG: writing to {gh_out}", file=sys.stderr)
-        with open(gh_out, "a", encoding="utf-8") as f:
-            f.write("changelog_content<<EOF\n")
-            f.write(changelog_output)
-            f.write("EOF\n")
-            f.write(f"version_content={version_output.strip()}\n")
-        print(f"DEBUG: wrote successfully", file=sys.stderr)
-    else:
-        print("DEBUG: GITHUB_OUTPUT not set!", file=sys.stderr)
+    # Output to stdout (pure function output, no file writes)
+    # JSON format for safe multiline handling
+    import json
+    output = {
+        "version": version_output.strip(),
+        "changelog": changelog_output
+    }
+    print(json.dumps(output, ensure_ascii=False), flush=True)
