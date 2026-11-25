@@ -1,4 +1,4 @@
-name: 'release__io_resolve_next_release'
+name: 'release__resolve_next_release_io'
 description: 'Resolves next SemVer version and release notes from git history and CHANGELOG.md (I/O + pure compute)'
 outputs:
   version:
@@ -28,7 +28,7 @@ runs:
         echo "EOF" >> $GITHUB_OUTPUT
     
     - id: pure
-      uses: ./.github/actions/release__pure_resolve_next_release
+      uses: ai-vibeqodez/dqwdwqd/.github/actions/release__resolve_next_release_pure
       with:
         raw_tags: ${{ steps.collect.outputs.raw_tags }}
         changelog_text: ${{ steps.collect.outputs.changelog_text }}

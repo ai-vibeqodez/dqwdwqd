@@ -1,0 +1,60 @@
+name: 'release__write_release_files_io'
+description: 'Updates VERSION and CHANGELOG.md files (I/O + pure render)'
+inputs:
+  version:
+    description: 'Release version'
+    required: true
+  release_notes:
+    description: 'Release notes content'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - id: collect
+      shell: bash
+      run: |
+        # Read existing CHANGELOG if it exists
+        if [ -f CHANGELOG.md ]; then
+          CHANGELOG_CONTENT=$(cat CHANGELOG.md)
+          # Detect CRLF
+          if file CHANGELOG.md | grep -q CRLF; then
+            HAS_CRLF=true
+          else
+            HAS_CRLF=false
+          fi
+        else
+          CHANGELOG_CONTENT=""
+          HAS_CRLF=false
+        fi
+        
+        # Get today's date
+        RELEASE_DATE=$(date -u +%Y-%m-%d)
+        
+        echo "changelog_content<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        echo "release_date=$RELEASE_DATE" >> $GITHUB_OUTPUT
+        echo "preserve_crlf=$HAS_CRLF" >> $GITHUB_OUTPUT
+    
+    - id: render
+      uses: ai-vibeqodez/dqwdwqd/.github/actions/release__write_release_files_pure
+      with:
+        existing_changelog_content: ${{ steps.collect.outputs.changelog_content }}
+        version: ${{ inputs.version }}
+        release_notes: ${{ inputs.release_notes }}
+        release_date: ${{ steps.collect.outputs.release_date }}
+        preserve_crlf: ${{ steps.collect.outputs.preserve_crlf }}
+    
+    - id: write
+      shell: bash
+      run: |
+        # Write VERSION
+        echo "${{ inputs.version }}" > VERSION
+        
+        # Write CHANGELOG
+        cat > CHANGELOG.md << 'CHANGELOG_EOF'
+        ${{ steps.render.outputs.changelog_content }}
+        CHANGELOG_EOF
+      env:
+        CHANGELOG_CONTENT: ${{ steps.render.outputs.changelog_content }}

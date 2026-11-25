@@ -1,4 +1,4 @@
-name: 'release__pure_resolve_next_release'
+name: 'release__resolve_next_release_pure'
 description: 'Pure function: resolves next SemVer version and release notes from git tags and CHANGELOG'
 inputs:
   raw_tags:
