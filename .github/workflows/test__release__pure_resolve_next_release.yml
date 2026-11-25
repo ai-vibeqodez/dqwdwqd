@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  test__pure__release:
+  job:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -268,16 +268,13 @@ jobs:
           echo "Found $count items listed"
           [[ $count -eq 3 ]] || exit 1
 
-      # Test 18: Breaking CHANGE in commit body
+      # Test 18: Breaking CHANGE with ! in scope
       - id: test_18_breaking_body
         uses: ./.github/actions/release__pure_resolve_next_release
         with:
           raw_tags: 'v1.0.0'
           changelog_text: ''
-          commits: |
-            refactor: restructure module
-            
-            BREAKING CHANGE: removed old API
+          commits: 'refactor(core)!: removed old API'
       
       - name: Verify test_18_breaking_body
         run: |
@@ -287,24 +284,43 @@ jobs:
           [[ "$version" == "2.0.0" ]] || exit 1
           echo "$notes" | grep -q "### Breaking" || exit 1
 
-      # Test 19: Commit with scope: feat(auth): add MFA
-      - id: test_19_scope_commit
+      # Test 19: Breaking CHANGE in commit body (multiline)
+      - id: test_19_breaking_in_body
+        uses: ./.github/actions/release__pure_resolve_next_release
+        with:
+          raw_tags: 'v1.0.0'
+          changelog_text: ''
+          commits: 'refactor: restructure module
+
+BREAKING CHANGE: removed old API endpoint'
+      
+      - name: Verify test_19_breaking_in_body
+        run: |
+          version="${{ steps.test_19_breaking_in_body.outputs.version }}"
+          notes="${{ steps.test_19_breaking_in_body.outputs.release_notes }}"
+          echo "Test 19: Got version=$version, expected=2.0.0"
+          [[ "$version" == "2.0.0" ]] || exit 1
+          echo "$notes" | grep -q "### Breaking" || exit 1
+          echo "$notes" | grep -q "restructure module" || exit 1
+
+      # Test 20: Commit with scope: feat(auth): add MFA
+      - id: test_20_scope_commit
         uses: ./.github/actions/release__pure_resolve_next_release
         with:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'feat(auth): add multi-factor authentication'
       
-      - name: Verify test_19_scope_commit
+      - name: Verify test_20_scope_commit
         run: |
-          version="${{ steps.test_19_scope_commit.outputs.version }}"
-          notes="${{ steps.test_19_scope_commit.outputs.release_notes }}"
-          echo "Test 19: Got version=$version, expected=1.1.0"
+          version="${{ steps.test_20_scope_commit.outputs.version }}"
+          notes="${{ steps.test_20_scope_commit.outputs.release_notes }}"
+          echo "Test 20: Got version=$version, expected=1.1.0"
           [[ "$version" == "1.1.0" ]] || exit 1
           echo "$notes" | grep -q "add multi-factor authentication" || exit 1
 
-      # Test 20: Multiple tags, pick latest
-      - id: test_20_multiple_tags
+      # Test 21: Multiple tags, pick latest
+      - id: test_21_multiple_tags
         uses: ./.github/actions/release__pure_resolve_next_release
         with:
           raw_tags: |
@@ -314,10 +330,10 @@ jobs:
           changelog_text: ''
           commits: ''
       
-      - name: Verify test_20_multiple_tags
+      - name: Verify test_21_multiple_tags
         run: |
-          version="${{ steps.test_20_multiple_tags.outputs.version }}"
-          echo "Test 20: Got version=$version, expected=2.0.1"
+          version="${{ steps.test_21_multiple_tags.outputs.version }}"
+          echo "Test 21: Got version=$version, expected=2.0.1"
           [[ "$version" == "2.0.1" ]] || exit 1
 
       # Summary
@@ -325,8 +341,9 @@ jobs:
         if: always()
         run: |
           echo "====== PURE RESOLVE NEXT RELEASE TEST SUMMARY ======"
-          echo "✓ All 20 test cases executed"
+          echo "✓ All 21 test cases executed"
           echo "✓ Version bumping logic verified"
           echo "✓ Release notes sections verified"
+          echo "✓ Multiline commits (BREAKING CHANGE in body) verified"
           echo "✓ Edge cases verified"
           echo "=================================================="

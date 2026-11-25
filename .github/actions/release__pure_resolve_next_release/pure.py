@@ -25,6 +25,17 @@ def find_changelog_version(changelog_text: str) -> tuple[int, int, int]:
     return 0, 0, 0
 
 
+def parse_commits(commits_str: str) -> list[str]:
+    """Parse commits: split by double newlines to handle multiline commit messages."""
+    # Split by double newlines first (body separator), then by single newlines for compatibility
+    if "\n\n" in commits_str:
+        blocks = commits_str.split("\n\n")
+        return [block.strip() for block in blocks if block.strip()]
+    else:
+        # Single-line format: each line is a commit
+        return [line.strip() for line in commits_str.splitlines() if line.strip()]
+
+
 def compute_release(
     base_version: tuple[int, int, int],
     commits: Iterable[str],
@@ -44,10 +55,18 @@ def compute_release(
         k: [] for k in ("Breaking", "Added", "Changed", "Deprecated", "Removed", "Fixed", "Security")
     }
 
-    for line in commits:
-        if m := re.match(r"^(?P<type>[a-z]+)(?:\([^)]*\))?(?P<bang>!)?:\s*(?P<desc>.+)$", line.strip(), re.I):
+    # Join commits iterable into string if needed, then parse
+    commits_str = "\n".join(commits) if isinstance(commits, list) else commits
+    parsed_commits = parse_commits(commits_str)
+
+    for commit_msg in parsed_commits:
+        # Get first line (subject) for regex matching
+        first_line = commit_msg.split("\n")[0]
+        
+        if m := re.match(r"^(?P<type>[a-z]+)(?:\([^)]*\))?(?P<bang>!)?:\s*(?P<desc>.+)$", first_line.strip(), re.I):
             desc = m["desc"].strip()
-            if m["bang"] or "BREAKING CHANGE" in line:
+            # Check entire commit message (including body) for BREAKING CHANGE
+            if m["bang"] or "BREAKING CHANGE" in commit_msg:
                 sections["Breaking"].append(desc)
             elif cat := type_map.get(m["type"].lower()):
                 sections[cat].append(desc)
