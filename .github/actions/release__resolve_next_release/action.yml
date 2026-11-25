@@ -1,4 +1,4 @@
-name: 'resolve_next_release'
+name: 'release__resolve_next_release'
 description: 'Resolves next SemVer version and release notes from git history and CHANGELOG.md'
 outputs:
   version:

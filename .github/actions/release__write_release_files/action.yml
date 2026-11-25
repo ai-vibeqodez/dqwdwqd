@@ -1,4 +1,4 @@
-name: 'write_release_files'
+name: 'release__write_release_files'
 description: 'Updates VERSION and prepends release section to CHANGELOG.md'
 inputs:
   version:
