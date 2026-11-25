@@ -20,7 +20,8 @@ jobs:
       
       - name: Verify test_1_empty_changelog
         run: |
-          content="${{ steps.test_1_empty_changelog.outputs.changelog_content }}"
+          json='${{ steps.test_1_empty_changelog.outputs.json_output }}'
+          content=$(echo "$json" | jq -r '.changelog')
           echo "Test 1: Checking for default header"
           echo "$content" | grep -q "# Changelog" || exit 1
           echo "$content" | grep -q "Keep a Changelog" || exit 1
@@ -45,7 +46,6 @@ jobs:
         run: |
           content="${{ steps.test_2_insert_before_existing.outputs.changelog_content }}"
           echo "Test 2: Checking new release before old release"
-          # Find positions
           new_pos=$(echo "$content" | grep -n "\[1.0.0\]" | cut -d: -f1)
           old_pos=$(echo "$content" | grep -n "\[0.5.0\]" | cut -d: -f1)
           echo "New release at line $new_pos, old at line $old_pos"
@@ -188,15 +188,12 @@ jobs:
       
       - name: Verify test_9_special_chars
         run: |
-          cat > /tmp/verify_test9.sh << 'SCRIPT_EOF'
           content="${{ steps.test_9_special_chars.outputs.changelog_content }}"
           echo "Test 9: Checking special characters"
           echo "$content" | grep -q "quoted" || exit 1
           echo "$content" | grep -q "Support for" || exit 1
           echo "$content" | grep -q "elements" || exit 1
           echo "$content" | grep -q "https://example.com" || exit 1
-          SCRIPT_EOF
-          bash /tmp/verify_test9.sh
 
       # Test 10: Date format YYYY-MM-DD
       - id: test_10_date_format
@@ -262,7 +259,6 @@ jobs:
         run: |
           content="${{ steps.test_12_spacing.outputs.changelog_content }}"
           echo "Test 12: Checking spacing between releases"
-          # Count blank lines between releases
           echo "$content" | awk '/## \[2.0.0\]/,/## \[1.0.0\]/' | head -n -1 | tail -n +2 | grep -q "^$" || exit 1
 
       # Summary
