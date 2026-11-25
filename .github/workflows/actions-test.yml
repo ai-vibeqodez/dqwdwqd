@@ -1,0 +1,8 @@
+name: actions-test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test__release__pure_resolve_next_release:
+    uses: ./.github/workflows/test__release__pure_resolve_next_release.yml

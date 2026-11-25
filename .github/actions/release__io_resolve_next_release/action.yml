@@ -1,0 +1,36 @@
+name: 'release__io_resolve_next_release'
+description: 'Resolves next SemVer version and release notes from git history and CHANGELOG.md (I/O + pure compute)'
+outputs:
+  version:
+    value: ${{ steps.pure.outputs.version }}
+  release_notes:
+    value: ${{ steps.pure.outputs.release_notes }}
+runs:
+  using: 'composite'
+  steps:
+    - id: collect
+      shell: bash
+      run: |
+        RAW_TAGS=$(git tag --merged HEAD --sort=-v:refname)
+        CHANGELOG_TEXT=$([ -f CHANGELOG.md ] && cat CHANGELOG.md || echo "")
+        COMMITS=$(git log $(git describe --tags --abbrev=0 2>/dev/null || echo "")..HEAD --no-merges --pretty=format:%s 2>/dev/null || git log --no-merges --pretty=format:%s)
+        
+        echo "raw_tags<<EOF" >> $GITHUB_OUTPUT
+        echo "$RAW_TAGS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        echo "changelog_text<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG_TEXT" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        echo "commits<<EOF" >> $GITHUB_OUTPUT
+        echo "$COMMITS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - id: pure
+      uses: ./.github/actions/release__pure_resolve_next_release
+      with:
+        raw_tags: ${{ steps.collect.outputs.raw_tags }}
+        changelog_text: ${{ steps.collect.outputs.changelog_text }}
+        commits: ${{ steps.collect.outputs.commits }}
+
