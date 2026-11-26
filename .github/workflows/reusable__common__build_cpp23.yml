@@ -80,6 +80,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: lint
+        if: matrix.preset == 'clang18-libcxx-debug'
         shell: bash
         run: ${{ inputs.lint_cmd }}
 

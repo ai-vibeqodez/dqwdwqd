@@ -21,3 +21,9 @@ jobs:
 
   test__common__generate_coverage_cpp23_io:
     uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__common__generate_coverage_cpp23_io.yml@main
+
+  test__release__checksums_pure:
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__release__checksums_pure.yml@main
+
+  test__release__checksums_io:
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__release__checksums_io.yml@main

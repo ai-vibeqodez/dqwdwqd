@@ -48,6 +48,44 @@ jobs:
           path: dist/
           merge-multiple: true
 
+      - name: Flatten dist artifacts
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          mkdir -p dist
+          find dist -mindepth 2 -type f | while IFS= read -r file; do
+            rel="${file#dist/}"
+            preset="${rel%%/*}"
+            base="$(basename "$file")"
+            if [[ "$base" == *.* ]]; then
+              mv "$file" "dist/${base%.*}-v${VERSION}-${preset}.${base##*.}"
+            else
+              mv "$file" "dist/${base}-v${VERSION}-${preset}"
+            fi
+          done
+          find dist -mindepth 1 -type d -empty -delete
+
+      - name: Generate Checksums
+        id: gen_checksums
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/release__checksums_io@main
+        with:
+          mode: 'generate'
+          artifacts_dir: 'dist/'
+          checksums_file: 'SHA256SUMS.txt'
+
+      - name: Verify Checksums
+        if: steps.gen_checksums.outputs.file_count != '0'
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/release__checksums_io@main
+        with:
+          mode: 'verify'
+          artifacts_dir: 'dist/'
+          checksums_file: 'SHA256SUMS.txt'
+
+      - name: Remove Empty Checksums File
+        if: steps.gen_checksums.outputs.file_count == '0'
+        run: |
+          rm -f dist/SHA256SUMS.txt
+
       - name: Commit, Tag, Push & Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
