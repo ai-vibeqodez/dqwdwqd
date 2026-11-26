@@ -41,12 +41,108 @@ runs:
   steps:
     - id: coverage
       shell: bash
-      run: ${{ github.action_path }}/generate.sh
-      env:
-        INPUT_SOURCE_DIR: ${{ inputs.source_dir }}
-        INPUT_BUILD_DIR: ${{ inputs.build_dir }}
-        INPUT_SOURCE_FILTER: ${{ inputs.source_filter }}
-        INPUT_EXCLUDE: ${{ inputs.exclude }}
-        INPUT_OUTPUT_DIR: ${{ inputs.output_dir }}
-        INPUT_XML_PATH: ${{ inputs.xml_path }}
-        INPUT_STUB: ${{ inputs.stub }}
+      run: |-
+        set -euo pipefail
+        
+        SOURCE_DIR="${{ inputs.source_dir }}"
+        BUILD_DIR="${{ inputs.build_dir }}"
+        SOURCE_FILTER="${{ inputs.source_filter }}"
+        EXCLUDE="${{ inputs.exclude }}"
+        OUTPUT_DIR="${{ inputs.output_dir }}"
+        XML_PATH="${{ inputs.xml_path }}"
+        STUB="${{ inputs.stub }}"
+        
+        if [[ "$STUB" == "true" ]]; then
+          mkdir -p "$(dirname "$XML_PATH")"
+          python3 << 'PYEOF'
+        import xml.etree.ElementTree as ET
+        
+        root = ET.Element('coverage', {
+            'version': '5.4',
+            'timestamp': '0',
+            'lines-valid': '100',
+            'lines-covered': '85',
+            'line-rate': '0.85',
+            'branches-covered': '0',
+            'branches-valid': '0',
+            'branch-rate': '0',
+            'complexity': '0'
+        })
+        
+        sources = ET.SubElement(root, 'sources')
+        ET.SubElement(sources, 'source').text = '.'
+        
+        packages = ET.SubElement(root, 'packages')
+        pkg = ET.SubElement(packages, 'package', {
+            'name': 'app',
+            'line-rate': '0.85',
+            'branch-rate': '0',
+            'complexity': '0'
+        })
+        
+        classes = ET.SubElement(pkg, 'classes')
+        cls = ET.SubElement(classes, 'class', {
+            'name': 'stub',
+            'filename': 'stub.cpp',
+            'line-rate': '0.85',
+            'branch-rate': '0',
+            'complexity': '0'
+        })
+        
+        lines = ET.SubElement(cls, 'lines')
+        ET.SubElement(lines, 'line', {'number': '1', 'hits': '1'})
+        ET.SubElement(lines, 'line', {'number': '2', 'hits': '1'})
+        
+        tree = ET.ElementTree(root)
+        tree.write("${{ inputs.xml_path }}", encoding='utf-8', xml_declaration=True)
+        PYEOF
+          
+          mkdir -p "$OUTPUT_DIR"
+          cat > "$OUTPUT_DIR/index.html" << 'HTMLEOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Coverage Report (Stub)</title>
+          <style>body { font-family: Arial; margin: 2em; } .cov-high { color: green; }</style>
+        </head>
+        <body>
+          <h1>Coverage Report (Stub)</h1>
+          <p class="cov-high">Overall: 85%</p>
+          <p><small>Generated in stub mode (no .gcda files)</small></p>
+        </body>
+        </html>
+        HTMLEOF
+          
+          echo "xml_path=$XML_PATH" >> $GITHUB_OUTPUT
+          echo "html_dir=$OUTPUT_DIR" >> $GITHUB_OUTPUT
+          echo "✓ Stub coverage files created"
+        else
+          GCC_VER=$(gcc -dumpversion | cut -d. -f1)
+          GCOV_CMD="gcov-${GCC_VER}"
+          
+          set -f
+          FILTER_FLAGS=""
+          if [[ -n "$SOURCE_FILTER" ]]; then
+            FILTER_FLAGS="--filter=$SOURCE_FILTER"
+          fi
+          EXCLUDE_FLAGS=""
+          if [[ -n "$EXCLUDE" ]]; then
+            EXCLUDE_FLAGS="--exclude=$EXCLUDE"
+          fi
+          set +f
+          
+          gcovr "$BUILD_DIR" \
+            --root "$SOURCE_DIR" \
+            $FILTER_FLAGS \
+            $EXCLUDE_FLAGS \
+            --gcov-executable "$GCOV_CMD" \
+            --gcov-ignore-errors=no_working_dir_found \
+            --exclude-unreachable-branches \
+            --exclude-throw-branches \
+            --xml "$XML_PATH" \
+            --html-details "$OUTPUT_DIR/index.html"
+          
+          echo "xml_path=$XML_PATH" >> $GITHUB_OUTPUT
+          echo "html_dir=$OUTPUT_DIR" >> $GITHUB_OUTPUT
+          echo "✓ Coverage report generated"
+        fi

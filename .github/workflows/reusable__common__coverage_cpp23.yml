@@ -15,8 +15,8 @@ on:
         description: 'Command to run tests'
       stub:
         type: boolean
-        required: false
-        default: true
+        required: true
+        default: false
         description: 'Generate stub coverage without .gcda files (fast CI debugging)'
       min_coverage:
         type: number
@@ -93,9 +93,9 @@ jobs:
         run: |
           PERCENT=$(echo '${{ steps.parse_coverage.outputs.json_output }}' | jq -r '.percent')
           MIN_COVERAGE=${{ inputs.min_coverage }}
-          
+
           echo "Coverage: $PERCENT% (required: $MIN_COVERAGE%)"
-          
+
           if (( PERCENT < MIN_COVERAGE )); then
             echo "❌ Coverage $PERCENT% is below minimum $MIN_COVERAGE%" >&2
             exit 1
