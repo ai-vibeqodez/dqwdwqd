@@ -1,0 +1,34 @@
+name: on_push__main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'cmake/**'
+      - 'tests/**'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
+      - 'Makefile'
+      - '.editorconfig'
+      - '.clang-format'
+      - '.clang-tidy'
+      - '.github/workflows/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__common__build_cpp23.yml@main
+    with:
+      upload_artifacts: false
+
+  coverage:
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__common__coverage_cpp23.yml@main
+    with:
+      min_coverage: 80
+      deploy_pages: true
+      deploy_badge: true

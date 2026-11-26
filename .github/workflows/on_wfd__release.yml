@@ -1,4 +1,4 @@
-name: release
+name: on_wfd__release
 
 on:
   workflow_dispatch:

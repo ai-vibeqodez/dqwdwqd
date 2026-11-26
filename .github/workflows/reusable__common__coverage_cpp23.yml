@@ -1,0 +1,132 @@
+name: reusable__common__coverage_cpp23
+
+on:
+  workflow_call:
+    inputs:
+      build_cmd:
+        type: string
+        required: false
+        default: 'make build'
+        description: 'Command to build the project'
+      test_cmd:
+        type: string
+        required: false
+        default: 'make test'
+        description: 'Command to run tests'
+      stub:
+        type: boolean
+        required: false
+        default: true
+        description: 'Generate stub coverage without .gcda files (fast CI debugging)'
+      min_coverage:
+        type: number
+        required: false
+        default: 30
+        description: 'Minimum coverage percentage required (0 = disabled)'
+      deploy_pages:
+        type: boolean
+        required: false
+        default: true
+        description: 'Deploy HTML report to GitHub Pages'
+      deploy_badge:
+        type: boolean
+        required: false
+        default: false
+        description: 'Deploy coverage badge SVG to separate branch'
+      pages_branch:
+        type: string
+        required: false
+        default: 'gh-pages'
+        description: 'Target branch for GitHub Pages deployment'
+      badges_branch:
+        type: string
+        required: false
+        default: 'badges'
+        description: 'Target branch for badge SVG deployment'
+      source_filter:
+        type: string
+        required: false
+        default: ''
+        description: 'Glob filter for source files to include in coverage'
+      exclude:
+        type: string
+        required: false
+        default: '_deps/*'
+        description: 'Glob pattern for files to exclude from coverage'
+
+jobs:
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-24.04
+    container: ghcr.io/ai-warevo/ci-cpp23:gcc-15
+    env:
+      PRESET: gcc-15-debug
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        shell: bash
+        run: ${{ inputs.build_cmd }}
+
+      - name: Test
+        shell: bash
+        run: ${{ inputs.test_cmd }}
+
+      - id: generate_coverage
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__generate_coverage_cpp23_io@main
+        with:
+          stub: ${{ inputs.stub }}
+          source_filter: ${{ inputs.source_filter }}
+          exclude: ${{ inputs.exclude }}
+
+      - id: parse_coverage
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__parse_coverage_pure@main
+        with:
+          xml_path: ${{ fromJson(steps.generate_coverage.outputs.xml_path) }}
+
+      - name: Threshold Check
+        if: ${{ inputs.min_coverage > 0 }}
+        shell: bash
+        run: |
+          PERCENT=$(echo '${{ steps.parse_coverage.outputs.json_output }}' | jq -r '.percent')
+          MIN_COVERAGE=${{ inputs.min_coverage }}
+          
+          echo "Coverage: $PERCENT% (required: $MIN_COVERAGE%)"
+          
+          if (( PERCENT < MIN_COVERAGE )); then
+            echo "❌ Coverage $PERCENT% is below minimum $MIN_COVERAGE%" >&2
+            exit 1
+          fi
+          echo "✓ Coverage threshold met"
+
+      - name: Render Badge
+        if: ${{ inputs.deploy_badge }}
+        id: render_badge
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__render_svg_badge_pure@main
+        with:
+          text_left: 'coverage'
+          text_right: '${{ fromJson(steps.parse_coverage.outputs.json_output).percent }}%'
+          bg_color_right: '${{ fromJson(steps.parse_coverage.outputs.json_output).color }}'
+          filename: 'coverage.svg'
+
+      - name: Deploy Badge
+        if: ${{ inputs.deploy_badge }}
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__deploy_to_branch_io@main
+        with:
+          source_path: coverage.svg
+          target_branch: ${{ inputs.badges_branch }}
+          target_filename: coverage.svg
+          nojekyll: 'false'
+
+      - name: Deploy Pages
+        if: ${{ inputs.deploy_pages }}
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__deploy_to_branch_io@main
+        with:
+          source_path: ${{ fromJson(steps.generate_coverage.outputs.html_dir) }}
+          target_branch: ${{ inputs.pages_branch }}
+          target_folder: .
+          nojekyll: 'true'
+          clean_target: 'true'

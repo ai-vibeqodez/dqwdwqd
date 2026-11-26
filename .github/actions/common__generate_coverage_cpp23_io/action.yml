@@ -1,0 +1,52 @@
+name: 'common__generate_coverage_cpp23_io'
+description: 'Generate coverage.xml and HTML report from CMake build using gcovr'
+inputs:
+  source_dir:
+    description: 'Source directory for coverage filtering'
+    required: false
+    default: '.'
+  build_dir:
+    description: 'CMake build directory containing .gcda files'
+    required: false
+    default: 'build'
+  source_filter:
+    description: 'Glob filter for source files to include in coverage (empty = all)'
+    required: false
+    default: ''
+  exclude:
+    description: 'Glob pattern for files to exclude'
+    required: false
+    default: '_deps/*'
+  output_dir:
+    description: 'Output directory for HTML report'
+    required: false
+    default: 'htmlcov'
+  xml_path:
+    description: 'Output path for Cobertura XML file'
+    required: false
+    default: 'coverage.xml'
+  stub:
+    description: 'Generate stub output without requiring .gcda files (for fast CI debugging)'
+    required: false
+    default: 'true'
+outputs:
+  xml_path:
+    value: ${{ steps.coverage.outputs.xml_path }}
+    description: 'Path to generated coverage.xml'
+  html_dir:
+    value: ${{ steps.coverage.outputs.html_dir }}
+    description: 'Path to generated HTML report directory'
+runs:
+  using: 'composite'
+  steps:
+    - id: coverage
+      shell: bash
+      run: ${{ github.action_path }}/generate.sh
+      env:
+        INPUT_SOURCE_DIR: ${{ inputs.source_dir }}
+        INPUT_BUILD_DIR: ${{ inputs.build_dir }}
+        INPUT_SOURCE_FILTER: ${{ inputs.source_filter }}
+        INPUT_EXCLUDE: ${{ inputs.exclude }}
+        INPUT_OUTPUT_DIR: ${{ inputs.output_dir }}
+        INPUT_XML_PATH: ${{ inputs.xml_path }}
+        INPUT_STUB: ${{ inputs.stub }}

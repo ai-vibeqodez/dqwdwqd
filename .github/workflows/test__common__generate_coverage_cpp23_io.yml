@@ -1,0 +1,104 @@
+name: test__common__generate_coverage_cpp23_io
+
+on:
+  workflow_call:
+
+jobs:
+  test_generate_coverage:
+    name: Generate Coverage (Stub)
+    runs-on: ubuntu-24.04
+    container: ghcr.io/ai-warevo/ci-cpp23:gcc-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Test 1: Stub generates valid coverage.xml
+      - id: test_stub_xml
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__generate_coverage_cpp23_io@main
+        with:
+          stub: 'true'
+          xml_path: 'test_coverage.xml'
+          output_dir: 'test_htmlcov'
+
+      - name: Verify test_stub_xml
+        shell: bash
+        run: |
+          XML_PATH=$(echo '${{ steps.test_stub_xml.outputs.xml_path }}')
+          HTML_DIR=$(echo '${{ steps.test_stub_xml.outputs.html_dir }}')
+          
+          echo "Test: Stub XML output"
+          echo "  xml_path=$XML_PATH"
+          echo "  html_dir=$HTML_DIR"
+          
+          # Verify outputs
+          [[ "$XML_PATH" == "test_coverage.xml" ]] || { echo "ERROR: xml_path mismatch" >&2; exit 1; }
+          [[ "$HTML_DIR" == "test_htmlcov" ]] || { echo "ERROR: html_dir mismatch" >&2; exit 1; }
+          
+          # Verify file exists
+          if [[ ! -f "$XML_PATH" ]]; then
+            echo "ERROR: coverage.xml not created" >&2
+            exit 1
+          fi
+          
+          echo "✓ PASS: xml_path"
+
+      - name: Verify test_stub_xml_format
+        shell: bash
+        run: |
+          # Verify valid XML structure
+          python3 -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('test_coverage.xml')
+          root = tree.getroot()
+          assert root.tag == 'coverage', f'Expected <coverage> root, got {root.tag}'
+          
+          line_rate = root.get('line-rate')
+          assert line_rate is not None, 'Missing line-rate attribute'
+          
+          percent = int(round(float(line_rate) * 100))
+          assert percent > 0, f'Expected positive coverage, got {percent}'
+          
+          print(f'  line-rate={line_rate} → {percent}%')
+          print('✓ PASS: XML format is valid Cobertura')
+          "
+
+      # Test 2: Stub generates HTML report
+      - name: Verify test_stub_html
+        shell: bash
+        run: |
+          if [[ ! -f "test_htmlcov/index.html" ]]; then
+            echo "ERROR: htmlcov/index.html not created" >&2
+            exit 1
+          fi
+          
+          # Verify HTML content
+          cat test_htmlcov/index.html | grep -q "<!DOCTYPE html>" || { echo "ERROR: Not valid HTML" >&2; exit 1; }
+          
+          echo "✓ PASS: HTML report created"
+
+      # Test 3: Parseable by common__parse_coverage_pure
+      - id: test_parse_stub_output
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__parse_coverage_pure@main
+        with:
+          xml_path: 'test_coverage.xml'
+
+      - name: Verify test_parse_stub_output
+        shell: bash
+        run: |
+          PERCENT=$(echo '${{ steps.test_parse_stub_output.outputs.json_output }}' | jq -r '.percent')
+          COLOR=$(echo '${{ steps.test_parse_stub_output.outputs.json_output }}' | jq -r '.color')
+          
+          echo "Test: Stub XML parseable by parse_coverage"
+          echo "  percent=$PERCENT, color=$COLOR"
+          
+          # Stub is 85% → should be brightgreen
+          [[ "$PERCENT" -gt "0" ]] || { echo "ERROR: Percent should be > 0" >&2; exit 1; }
+          [[ -n "$COLOR" ]] || { echo "ERROR: Color should not be empty" >&2; exit 1; }
+          
+          echo "✓ PASS: Stub output is parseable"
+
+      - name: Test Summary
+        if: always()
+        shell: bash
+        run: |
+          echo "✓ All generate_coverage tests executed"
