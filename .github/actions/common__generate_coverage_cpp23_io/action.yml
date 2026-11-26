@@ -40,8 +40,7 @@ runs:
   using: 'composite'
   steps:
     - id: coverage
-      shell: bash
-      run: python3 "${{ github.action_path }}/generate.py"
+      shell: python
       env:
         INPUT_SOURCE_DIR: ${{ inputs.source_dir }}
         INPUT_BUILD_DIR: ${{ inputs.build_dir }}
@@ -50,3 +49,125 @@ runs:
         INPUT_OUTPUT_DIR: ${{ inputs.output_dir }}
         INPUT_XML_PATH: ${{ inputs.xml_path }}
         INPUT_STUB: ${{ inputs.stub }}
+      run: |-
+        import os
+        import sys
+        import subprocess
+        import xml.etree.ElementTree as ET
+        from pathlib import Path
+
+        SOURCE_DIR = os.environ.get('INPUT_SOURCE_DIR', '.')
+        BUILD_DIR = os.environ.get('INPUT_BUILD_DIR', 'build')
+        SOURCE_FILTER = os.environ.get('INPUT_SOURCE_FILTER', '')
+        EXCLUDE = os.environ.get('INPUT_EXCLUDE', '_deps/*')
+        OUTPUT_DIR = os.environ.get('INPUT_OUTPUT_DIR', 'htmlcov')
+        XML_PATH = os.environ.get('INPUT_XML_PATH', 'coverage.xml')
+        STUB = os.environ.get('INPUT_STUB', 'true').lower() == 'true'
+
+        def generate_stub_xml(xml_path: str) -> None:
+            path = Path(xml_path)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            
+            root = ET.Element('coverage', {
+                'version': '5.4',
+                'timestamp': '0',
+                'lines-valid': '100',
+                'lines-covered': '85',
+                'line-rate': '0.85',
+                'branches-covered': '0',
+                'branches-valid': '0',
+                'branch-rate': '0',
+                'complexity': '0'
+            })
+            
+            sources = ET.SubElement(root, 'sources')
+            ET.SubElement(sources, 'source').text = '.'
+            
+            packages = ET.SubElement(root, 'packages')
+            pkg = ET.SubElement(packages, 'package', {
+                'name': 'app',
+                'line-rate': '0.85',
+                'branch-rate': '0',
+                'complexity': '0'
+            })
+            
+            classes = ET.SubElement(pkg, 'classes')
+            cls = ET.SubElement(classes, 'class', {
+                'name': 'stub',
+                'filename': 'stub.cpp',
+                'line-rate': '0.85',
+                'branch-rate': '0',
+                'complexity': '0'
+            })
+            
+            lines = ET.SubElement(cls, 'lines')
+            ET.SubElement(lines, 'line', {'number': '1', 'hits': '1'})
+            ET.SubElement(lines, 'line', {'number': '2', 'hits': '1'})
+            
+            tree = ET.ElementTree(root)
+            tree.write(xml_path, encoding='utf-8', xml_declaration=True)
+
+        def generate_stub_html(output_dir: str) -> None:
+            path = Path(output_dir)
+            path.mkdir(parents=True, exist_ok=True)
+            
+            html_content = '''<!DOCTYPE html>
+        <html>
+        <head>
+          <title>Coverage Report (Stub)</title>
+          <style>body { font-family: Arial; margin: 2em; } .cov-high { color: green; }</style>
+        </head>
+        <body>
+          <h1>Coverage Report (Stub)</h1>
+          <p class="cov-high">Overall: 85%</p>
+          <p><small>Generated in stub mode (no .gcda files)</small></p>
+        </body>
+        </html>'''
+            
+            with open(path / 'index.html', 'w', encoding='utf-8') as f:
+                f.write(html_content)
+
+        def run_gcovr(build_dir: str, source_dir: str, source_filter: str, exclude: str, xml_path: str, output_dir: str) -> None:
+            result = subprocess.run(['gcc', '-dumpversion'], capture_output=True, text=True, check=True)
+            gcc_ver = result.stdout.strip().split('.')[0]
+            gcov_cmd = f'gcov-{gcc_ver}'
+            
+            cmd = ['gcovr', build_dir, '--root', source_dir]
+            
+            if source_filter:
+                cmd.extend(['--filter', source_filter])
+            
+            if exclude:
+                cmd.extend(['--exclude', exclude])
+            
+            cmd.extend([
+                '--gcov-executable', gcov_cmd,
+                '--gcov-ignore-errors=no_working_dir_found',
+                '--exclude-unreachable-branches',
+                '--exclude-throw-branches',
+                '--xml', xml_path,
+                '--html-details', f'{output_dir}/index.html',
+            ])
+            
+            subprocess.run(cmd, check=True)
+
+        if STUB:
+            generate_stub_xml(XML_PATH)
+            generate_stub_html(OUTPUT_DIR)
+            print('✓ Stub coverage files created')
+        else:
+            try:
+                run_gcovr(BUILD_DIR, SOURCE_DIR, SOURCE_FILTER, EXCLUDE, XML_PATH, OUTPUT_DIR)
+                print('✓ Coverage report generated')
+            except subprocess.CalledProcessError as e:
+                print(f'ERROR: gcovr failed: {e}', file=sys.stderr)
+                sys.exit(1)
+
+        gh_out = os.environ.get('GITHUB_OUTPUT')
+        if gh_out:
+            with open(gh_out, 'a', encoding='utf-8') as f:
+                f.write(f'xml_path={XML_PATH}\n')
+                f.write(f'html_dir={OUTPUT_DIR}\n')
+        else:
+            print('ERROR: GITHUB_OUTPUT not set', file=sys.stderr)
+            sys.exit(1)

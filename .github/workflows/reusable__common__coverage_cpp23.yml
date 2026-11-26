@@ -25,12 +25,12 @@ on:
         description: 'Minimum coverage percentage required (0 = disabled)'
       deploy_pages:
         type: boolean
-        required: false
-        default: true
+        required: true
+        default: false
         description: 'Deploy HTML report to GitHub Pages'
       deploy_badge:
         type: boolean
-        required: false
+        required: true
         default: false
         description: 'Deploy coverage badge SVG to separate branch'
       pages_branch:
@@ -45,18 +45,18 @@ on:
         description: 'Target branch for badge SVG deployment'
       source_filter:
         type: string
-        required: false
+        required: true
         default: ''
         description: 'Glob filter for source files to include in coverage'
       exclude:
         type: string
-        required: false
+        required: true
         default: '_deps/*'
         description: 'Glob pattern for files to exclude from coverage'
 
 jobs:
-  coverage:
-    name: Coverage
+  build_and_cover:
+    name: Build & Coverage
     runs-on: ubuntu-24.04
     container: ghcr.io/ai-warevo/ci-cpp23:gcc-15
     env:
@@ -67,27 +67,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout shared CI actions
-        uses: actions/checkout@v4
-        with:
-          repository: ai-vibeqodez/dqwdwqd
-          ref: main
-          path: .ci-actions
-
-      - name: Verify CI actions checkout
-        shell: bash
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Files in workspace:"
-          ls -la
-          if [[ -d ".ci-actions" ]]; then
-            echo "✓ .ci-actions exists"
-            ls -la .ci-actions/.github/actions/
-          else
-            echo "✗ .ci-actions NOT FOUND"
-            exit 1
-          fi
-
       - name: Build
         shell: bash
         run: ${{ inputs.build_cmd }}
@@ -97,16 +76,35 @@ jobs:
         run: ${{ inputs.test_cmd }}
 
       - id: generate_coverage
-        uses: ./.ci-actions/.github/actions/common__generate_coverage_cpp23_io
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__generate_coverage_cpp23_io@main
         with:
           stub: ${{ inputs.stub }}
           source_filter: ${{ inputs.source_filter }}
           exclude: ${{ inputs.exclude }}
 
-      - id: parse_coverage
-        uses: ./.ci-actions/.github/actions/common__parse_coverage_pure
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
         with:
-          xml_path: ${{ fromJson(steps.generate_coverage.outputs.xml_path) }}
+          name: coverage-results
+          path: |
+            ${{ steps.generate_coverage.outputs.xml_path }}
+            ${{ steps.generate_coverage.outputs.html_dir }}
+
+  report_and_deploy:
+    name: Report & Deploy
+    needs: build_and_cover
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-results
+
+      - id: parse_coverage
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__parse_coverage_pure@main
+        with:
+          xml_path: coverage.xml
 
       - name: Threshold Check
         if: ${{ inputs.min_coverage > 0 }}
@@ -126,7 +124,7 @@ jobs:
       - name: Render Badge
         if: ${{ inputs.deploy_badge }}
         id: render_badge
-        uses: ./.ci-actions/.github/actions/common__render_svg_badge_pure
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__render_svg_badge_pure@main
         with:
           text_left: 'coverage'
           text_right: '${{ fromJson(steps.parse_coverage.outputs.json_output).percent }}%'
@@ -135,7 +133,7 @@ jobs:
 
       - name: Deploy Badge
         if: ${{ inputs.deploy_badge }}
-        uses: ./.ci-actions/.github/actions/common__deploy_to_branch_io
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__deploy_to_branch_io@main
         with:
           source_path: coverage.svg
           target_branch: ${{ inputs.badges_branch }}
@@ -144,15 +142,10 @@ jobs:
 
       - name: Deploy Pages
         if: ${{ inputs.deploy_pages }}
-        uses: ./.ci-actions/.github/actions/common__deploy_to_branch_io
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__deploy_to_branch_io@main
         with:
-          source_path: ${{ fromJson(steps.generate_coverage.outputs.html_dir) }}
+          source_path: htmlcov
           target_branch: ${{ inputs.pages_branch }}
           target_folder: .
           nojekyll: 'true'
           clean_target: 'true'
-
-      - name: Cleanup CI actions
-        if: always()
-        shell: bash
-        run: rm -rf .ci-actions
