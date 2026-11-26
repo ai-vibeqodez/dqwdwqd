@@ -20,7 +20,8 @@ on:
         description: 'todo:: FIXME'
 
 jobs:
-  lint:
+  build:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
