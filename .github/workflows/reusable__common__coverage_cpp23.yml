@@ -67,6 +67,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Checkout shared CI actions
+        uses: actions/checkout@v4
+        with:
+          repository: ai-vibeqodez/dqwdwqd
+          ref: main
+          path: .ci-actions
+
       - name: Build
         shell: bash
         run: ${{ inputs.build_cmd }}
@@ -76,14 +83,14 @@ jobs:
         run: ${{ inputs.test_cmd }}
 
       - id: generate_coverage
-        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__generate_coverage_cpp23_io@main
+        uses: ./.ci-actions/.github/actions/common__generate_coverage_cpp23_io
         with:
           stub: ${{ inputs.stub }}
           source_filter: ${{ inputs.source_filter }}
           exclude: ${{ inputs.exclude }}
 
       - id: parse_coverage
-        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__parse_coverage_pure@main
+        uses: ./.ci-actions/.github/actions/common__parse_coverage_pure
         with:
           xml_path: ${{ fromJson(steps.generate_coverage.outputs.xml_path) }}
 
@@ -105,7 +112,7 @@ jobs:
       - name: Render Badge
         if: ${{ inputs.deploy_badge }}
         id: render_badge
-        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__render_svg_badge_pure@main
+        uses: ./.ci-actions/.github/actions/common__render_svg_badge_pure
         with:
           text_left: 'coverage'
           text_right: '${{ fromJson(steps.parse_coverage.outputs.json_output).percent }}%'
@@ -114,7 +121,7 @@ jobs:
 
       - name: Deploy Badge
         if: ${{ inputs.deploy_badge }}
-        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__deploy_to_branch_io@main
+        uses: ./.ci-actions/.github/actions/common__deploy_to_branch_io
         with:
           source_path: coverage.svg
           target_branch: ${{ inputs.badges_branch }}
@@ -123,10 +130,15 @@ jobs:
 
       - name: Deploy Pages
         if: ${{ inputs.deploy_pages }}
-        uses: ai-vibeqodez/dqwdwqd/.github/actions/common__deploy_to_branch_io@main
+        uses: ./.ci-actions/.github/actions/common__deploy_to_branch_io
         with:
           source_path: ${{ fromJson(steps.generate_coverage.outputs.html_dir) }}
           target_branch: ${{ inputs.pages_branch }}
           target_folder: .
           nojekyll: 'true'
           clean_target: 'true'
+
+      - name: Cleanup CI actions
+        if: always()
+        shell: bash
+        run: rm -rf .ci-actions
