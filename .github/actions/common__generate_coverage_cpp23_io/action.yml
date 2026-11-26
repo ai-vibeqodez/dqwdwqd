@@ -40,7 +40,7 @@ runs:
   using: 'composite'
   steps:
     - id: coverage
-      shell: python3
+      shell: python3 {0}
       env:
         INPUT_SOURCE_DIR: ${{ inputs.source_dir }}
         INPUT_BUILD_DIR: ${{ inputs.build_dir }}
