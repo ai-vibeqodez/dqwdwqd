@@ -3,35 +3,39 @@ name: reusable__release__resolve_version
 on:
   workflow_call:
     inputs:
-      version_source:
+      lint_cmd:
         type: string
         required: false
-        default: 'version_file'
-        description: 'Where to read version from: git_tags, version_file, package_json, cargo_toml'
-      version_file_path:
+        default: 'make lint'
+        description: 'todo:: FIXME'
+      build_cmd:
         type: string
         required: false
-        default: 'VERSION'
-        description: 'Path to version file (for version_file source)'
-    outputs:
-      version:
-        value: ${{ jobs.resolve.outputs.version }}
-      release_notes:
-        value: ${{ jobs.resolve.outputs.release_notes }}
+        default: 'make build'
+        description: 'todo:: FIXME'
+      test_cmd:
+        type: string
+        required: false
+        default: 'make test'
+        description: 'todo:: FIXME'
 
 jobs:
-  resolve:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.resolve.outputs.version }}
-      release_notes: ${{ steps.resolve.outputs.release_notes }}
+  lint:
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - id: resolve
-        uses: ai-vibeqodez/dqwdwqd/.github/actions/release__resolve_next_release_io@main
+      - name: lint
+        run: ${{ inputs.lint_cmd }}
+
+      - name: build
+        run: ${{ inputs.build_cmd }}
+
+      - name: test
+        run: ${{ inputs.test_cmd }}
+
+      - uses: actions/upload-artifact@v4
         with:
-          version_source: ${{ inputs.version_source }}
-          version_file_path: ${{ inputs.version_file_path }}
+          name: central-build
+          path: dist/
