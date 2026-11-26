@@ -7,17 +7,17 @@ on:
         type: string
         required: false
         default: 'make lint'
-        description: 'todo:: FIXME'
+        description: 'Command to run code linting and style checks'
       build_cmd:
         type: string
         required: false
         default: 'make build'
-        description: 'todo:: FIXME'
+        description: 'Command to build the project'
       test_cmd:
         type: string
         required: false
         default: 'make test'
-        description: 'todo:: FIXME'
+        description: 'Command to run the test suite'
 
 jobs:
   build:
