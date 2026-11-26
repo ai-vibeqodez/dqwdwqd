@@ -9,6 +9,8 @@
 #   make test
 #   make build PRESET=gcc-15-debug
 #   make build PRESET=gcc-15-release
+#   make build PRESET=gcc-15-asan
+#   make build PRESET=gcc-15-tsan
 #   make build PRESET=msvc-debug
 #   make build PRESET=msvc-release
 #   make build PRESET=clang18-libcxx-debug

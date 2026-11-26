@@ -18,8 +18,12 @@ jobs:
       upload_artifacts: false
       new_version_number: ${{ needs.resolve_version.outputs.version }}
 
+  # sanitizers:
+  #   needs: resolve_version
+  #   uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__common__sanitizers_cpp23.yml@main
+
   publish:
-    needs: [resolve_version, build]
+    needs: [resolve_version, build, sanitizers]
     uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__release__publish.yml@main
     with:
       version: ${{ needs.resolve_version.outputs.version }}
