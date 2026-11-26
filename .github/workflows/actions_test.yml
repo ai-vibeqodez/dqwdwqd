@@ -1,4 +1,4 @@
-name: actions-test
+name: actions_test
 
 on:
   workflow_dispatch:
@@ -6,6 +6,6 @@ on:
 jobs:
   test__resolve_next_release_pure:
     uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__resolve_next_release_pure.yml@main
-  
+
   test__write_release_files_pure:
     uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__write_release_files_pure.yml@main
