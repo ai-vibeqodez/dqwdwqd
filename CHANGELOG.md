@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 
 
+## [1.0.10] - 2026-11-26
+
+### Changed
+
+- split reusable-release into resolve-version + publish workflows
+
 ## [1.0.9] - 2026-11-26
 
 ### Fixed
