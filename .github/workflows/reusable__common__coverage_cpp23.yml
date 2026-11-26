@@ -74,7 +74,19 @@ jobs:
           ref: main
           path: .ci-actions
 
-      - name: Build
+      - name: Verify CI actions checkout
+        shell: bash
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Files in workspace:"
+          ls -la
+          if [[ -d ".ci-actions" ]]; then
+            echo "✓ .ci-actions exists"
+            ls -la .ci-actions/.github/actions/
+          else
+            echo "✗ .ci-actions NOT FOUND"
+            exit 1
+          fi
         shell: bash
         run: ${{ inputs.build_cmd }}
 
