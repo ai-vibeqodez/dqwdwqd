@@ -3,6 +3,11 @@ name: reusable__common__build_cpp23
 on:
   workflow_call:
     inputs:
+      upload_artifacts:
+        type: boolean
+        required: true
+        default: false
+        description: 'Whether to upload build artifacts from dist/'
       new_version_number:
         type: string
         required: false

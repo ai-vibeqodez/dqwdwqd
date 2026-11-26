@@ -15,6 +15,7 @@ jobs:
     needs: resolve_version
     uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__common__build_cpp23.yml@main
     with:
+      upload_artifacts: false
       new_version_number: ${{ needs.resolve_version.outputs.version }}
 
   publish:
@@ -24,36 +25,17 @@ jobs:
       version: ${{ needs.resolve_version.outputs.version }}
       release_notes: ${{ needs.resolve_version.outputs.release_notes }}
       release_notes_footer: |
-        ### 📦 What's Included
-        **Download the binary for your platform:**
-        - Linux: `__lox`
-        - Windows: `__lox.exe`
+        ### 📦 Header
+        ** List Title:**
+        - List Item `1`
+        - List Item `2`
 
-        **Configuration example:**
-
-        Create `~/.__lox/config.json` (or `%USERPROFILE%\.__lox\config.json` on Windows):
+        **Code example:**
 
         ```json
         {
-          "LogLevel": "info",
+          "LogLevel": "info"
         }
         ```
 
-        **Quick setup — Linux:**
-        ```bash
-        chmod +x __lox
-        sudo mv __lox /usr/local/bin/__lox
-        mkdir -p ~/.__lox
-        cp config.json ~/.__lox/
-        __lox
-        ```
-
-        **Quick setup — Windows (PowerShell):**
-        ```powershell
-        Move-Item .\__lox.exe C:\Windows\__lox.exe
-        New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.__lox"
-        Copy-Item config.json "$env:USERPROFILE\.__lox\"
-        __lox
-        ```
-
-        See [README.md](https://github.com/ai-warevo/gitsync#readme) for full documentation.
+        See [README.md](https://github.com/ai-warevo/) for full documentation.
