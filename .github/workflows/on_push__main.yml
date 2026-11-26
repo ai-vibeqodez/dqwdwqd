@@ -33,3 +33,5 @@ jobs:
       min_coverage: 80
       deploy_pages: true
       deploy_badge: true
+      source_filter: ''
+      exclude: '_deps/*'
