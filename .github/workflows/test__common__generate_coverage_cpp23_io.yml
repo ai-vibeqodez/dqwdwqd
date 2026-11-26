@@ -7,7 +7,6 @@ jobs:
   test_generate_coverage:
     name: Generate Coverage (Stub)
     runs-on: ubuntu-24.04
-    container: ghcr.io/ai-warevo/ci-cpp23:gcc-15
 
     steps:
       - uses: actions/checkout@v4
