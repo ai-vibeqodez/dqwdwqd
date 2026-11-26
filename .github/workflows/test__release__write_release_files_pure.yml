@@ -1,4 +1,4 @@
-name: test__write_release_files_pure
+name: test__release__write_release_files_pure
 
 on:
   workflow_call:
@@ -17,7 +17,7 @@ jobs:
           version: '1.0.0'
           release_notes: '### Added\n\n- Initial release'
           release_date: '2024-01-01'
-      
+
       - name: Verify test_1_empty_changelog
         run: |
           json='${{ steps.test_1_empty_changelog.outputs.json_output }}'
@@ -33,15 +33,15 @@ jobs:
         with:
           existing_changelog_content: |
             # Changelog
-            
+
             ## [0.5.0] - 2023-12-01
-            
+
             ### Fixed
             - Bug fix
           version: '1.0.0'
           release_notes: '### Added\n\n- New feature'
           release_date: '2024-01-01'
-      
+
       - name: Verify test_2_insert_before_existing
         run: |
           json='${{ steps.test_2_insert_before_existing.outputs.json_output }}'
@@ -60,7 +60,7 @@ jobs:
           version: '2.1.3'
           release_notes: '### Added\n\n- Feature A'
           release_date: '2024-06-15'
-      
+
       - name: Verify test_3_format_check
         run: |
           json='${{ steps.test_3_format_check.outputs.json_output }}'
@@ -75,15 +75,15 @@ jobs:
         with:
           existing_changelog_content: |
             # Changelog
-            
+
             ## [1.0.0] - 2024-01-01
-            
+
             ### Added
             - Version 1
           version: '2.0.0'
           release_notes: '### Added\n\n- Version 2'
           release_date: '2024-06-01'
-      
+
       - name: Verify test_4_multiple_releases
         run: |
           json='${{ steps.test_4_multiple_releases.outputs.json_output }}'
@@ -102,7 +102,7 @@ jobs:
           version: '3.2.1'
           release_notes: 'test'
           release_date: '2024-01-01'
-      
+
       - name: Verify test_5_version_output
         run: |
           json='${{ steps.test_5_version_output.outputs.json_output }}'
@@ -118,20 +118,20 @@ jobs:
           version: '1.5.0'
           release_notes: |
             ### Added
-            
+
             - New API endpoint
             - Config option
-            
+
             ### Fixed
-            
+
             - Memory leak
             - Race condition
-            
+
             ### Breaking
-            
+
             - Removed deprecated method
           release_date: '2024-03-01'
-      
+
       - name: Verify test_6_multiple_sections
         run: |
           json='${{ steps.test_6_multiple_sections.outputs.json_output }}'
@@ -151,7 +151,7 @@ jobs:
           version: '1.0.0'
           release_notes: ''
           release_date: '2024-01-01'
-      
+
       - name: Verify test_7_empty_release_notes
         run: |
           json='${{ steps.test_7_empty_release_notes.outputs.json_output }}'
@@ -165,12 +165,12 @@ jobs:
         with:
           existing_changelog_content: |
             # Changelog
-            
+
             All notable changes...
           version: '1.0.0'
           release_notes: '### Added\n\n- Project started'
           release_date: '2024-01-01'
-      
+
       - name: Verify test_8_first_release
         run: |
           json='${{ steps.test_8_first_release.outputs.json_output }}'
@@ -187,12 +187,12 @@ jobs:
           version: '1.0.0'
           release_notes: |
             ### Added
-            
+
             - Fix "quoted" text
             - Support for `code` elements
             - URL: https://example.com
           release_date: '2024-01-01'
-      
+
       - name: Verify test_9_special_chars
         run: |
           json='${{ steps.test_9_special_chars.outputs.json_output }}'
@@ -211,7 +211,7 @@ jobs:
           version: '1.0.0'
           release_notes: 'test'
           release_date: '2024-12-25'
-      
+
       - name: Verify test_10_date_format
         run: |
           json='${{ steps.test_10_date_format.outputs.json_output }}'
@@ -225,20 +225,20 @@ jobs:
         with:
           existing_changelog_content: |
             # Changelog
-            
+
             All notable changes to this project will be documented in this file.
-            
+
             The format is based on [Keep a Changelog](https://keepachangelog.com),
             and this project adheres to [Semantic Versioning](https://semver.org).
-            
+
             ## [0.1.0] - 2023-01-01
-            
+
             ### Added
             - Initial version
           version: '1.0.0'
           release_notes: '### Added\n\n- Production ready'
           release_date: '2024-01-01'
-      
+
       - name: Verify test_11_preserve_header
         run: |
           json='${{ steps.test_11_preserve_header.outputs.json_output }}'

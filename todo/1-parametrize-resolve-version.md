@@ -48,7 +48,7 @@ Branch logic based on `version_source`:
 - Git tags priority ✓
 
 ## Acceptance Criteria
-- ✓ Workflow accepts `version_source` input
+- ✓ Workflow accepts `version_source` input (git_tags, version_file, package_json, cargo_toml)
 - ✓ Each source type correctly parses version
 - ✓ Outputs `version` and `release_notes` consistently
 - ✓ Backward compatible (no inputs = git_tags)
@@ -59,3 +59,22 @@ Branch logic based on `version_source`:
 
 ## Blocking Issues
 None — pure logic
+
+## Status
+✓ COMPLETED
+
+### Architecture:
+- **Workflow** (`reusable__release_resolve_version.yml`): thin orchestrator, passes inputs through
+- **IO Action** (`release__resolve_next_release_io`): collects data from different version sources
+- **Pure Action** (`release__resolve_next_release_pure`): deterministic version bump logic (unchanged)
+
+### What was done:
+1. Added `version_source` and `version_file_path` inputs to `release__resolve_next_release_io` action
+2. Implemented branching logic (case statement) in IO action's `collect` step:
+   - `git_tags`: `git tag --merged HEAD --sort=-v:refname`
+   - `version_file`: reads from VERSION or custom path
+   - `package_json`: extracts version via jq
+   - `cargo_toml`: parses with grep/sed
+3. All sources normalize to `raw_tags` format (`vX.Y.Z`)
+4. Workflow remains thin: just passes inputs to IO action
+5. Created `test__parametrize_resolve_version.yml` testing IO action directly with 5 test cases
