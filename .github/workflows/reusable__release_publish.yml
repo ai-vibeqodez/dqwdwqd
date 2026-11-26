@@ -67,7 +67,7 @@ jobs:
           fi
 
           git tag -a "v${VERSION}" -m "Release v${VERSION}"
-          git push origin HEAD --follow-tags
+          git push origin main --follow-tags
 
           # Combine release notes with footer
           if [ -n "$RELEASE_NOTES_FOOTER" ]; then

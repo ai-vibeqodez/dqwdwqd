@@ -2,6 +2,17 @@ name: reusable__release_resolve_version
 
 on:
   workflow_call:
+    inputs:
+      version_source:
+        type: string
+        required: false
+        default: 'version_file'
+        description: 'Where to read version from: git_tags, version_file, package_json, cargo_toml'
+      version_file_path:
+        type: string
+        required: false
+        default: 'VERSION'
+        description: 'Path to version file (for version_file source)'
     outputs:
       version:
         value: ${{ jobs.resolve.outputs.version }}
@@ -21,3 +32,6 @@ jobs:
 
       - id: resolve
         uses: ai-vibeqodez/dqwdwqd/.github/actions/release__resolve_next_release_io@main
+        with:
+          version_source: ${{ inputs.version_source }}
+          version_file_path: ${{ inputs.version_file_path }}

@@ -118,6 +118,20 @@ Use:
 - `@v1.0.0` — for specific tag
 - `@commit-sha` — for specific commit
 
+**REUSABLE CI: NO LOCAL PATHS**
+
+In shared CI infrastructure, **always use full org/repo paths** (`ai-vibeqodez/dqwdwqd/...@main`), never local paths (`./.github/workflows/...`). Local paths only work in the central repo itself; projects importing this CI cannot use them.
+
+**❌ Bad (breaks in imported projects):**
+```yaml
+uses: ./.github/workflows/test__resolve_next_release_pure.yml
+```
+
+**✓ Good (works everywhere):**
+```yaml
+uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__resolve_next_release_pure.yml@main
+```
+
 ---
 
 ## Parsing Strategies

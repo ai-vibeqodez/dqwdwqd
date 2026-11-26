@@ -4,8 +4,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  test__resolve_next_release_pure:
-    uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__resolve_next_release_pure.yml@main
+  test__release__resolve_next_release_pure:
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__release__resolve_next_release_pure.yml@main
 
-  test__write_release_files_pure:
-    uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__write_release_files_pure.yml@main
+  test__release__resolve_next_release_io:
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__release__resolve_next_release_io.yml@main
+
+  test__release__write_release_files_pure:
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__release__write_release_files_pure.yml@main

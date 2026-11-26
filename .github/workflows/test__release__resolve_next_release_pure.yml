@@ -1,4 +1,4 @@
-name: test__resolve_next_release_pure
+name: test__release__resolve_next_release_pure
 
 on:
   workflow_call:
@@ -16,7 +16,7 @@ jobs:
           raw_tags: ''
           changelog_text: ''
           commits: ''
-      
+
       - name: Verify test_1_no_tags_no_commits
         run: |
           json='${{ steps.test_1_no_tags_no_commits.outputs.json_output }}'
@@ -31,7 +31,7 @@ jobs:
           raw_tags: 'v1.2.3'
           changelog_text: ''
           commits: ''
-      
+
       - name: Verify test_2_has_tag_no_commits
         run: |
           json='${{ steps.test_2_has_tag_no_commits.outputs.json_output }}'
@@ -46,7 +46,7 @@ jobs:
           raw_tags: 'v1.2.3'
           changelog_text: ''
           commits: 'feat: add new feature'
-      
+
       - name: Verify test_3_feat_commit
         run: |
           json='${{ steps.test_3_feat_commit.outputs.json_output }}'
@@ -61,7 +61,7 @@ jobs:
           raw_tags: 'v1.2.3'
           changelog_text: ''
           commits: 'feat!: breaking change'
-      
+
       - name: Verify test_4_breaking_change
         run: |
           json='${{ steps.test_4_breaking_change.outputs.json_output }}'
@@ -76,7 +76,7 @@ jobs:
           raw_tags: 'v1.2.3'
           changelog_text: ''
           commits: 'fix: resolve bug'
-      
+
       - name: Verify test_5_fix_commit
         run: |
           json='${{ steps.test_5_fix_commit.outputs.json_output }}'
@@ -94,7 +94,7 @@ jobs:
             ## [2.0.0]
             - Some changes
           commits: ''
-      
+
       - name: Verify test_6_changelog_max_version
         run: |
           json='${{ steps.test_6_changelog_max_version.outputs.json_output }}'
@@ -112,7 +112,7 @@ jobs:
             feat: feature one
             fix: fix one
             fix: fix two
-      
+
       - name: Verify test_7_multiple_feat_fix
         run: |
           json='${{ steps.test_7_multiple_feat_fix.outputs.json_output }}'
@@ -130,7 +130,7 @@ jobs:
             feat!: breaking feature
             feat: regular feature
             fix: fix one
-      
+
       - name: Verify test_8_breaking_feat
         run: |
           json='${{ steps.test_8_breaking_feat.outputs.json_output }}'
@@ -145,7 +145,7 @@ jobs:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'feat: add user authentication'
-      
+
       - name: Verify test_9_release_notes_added
         run: |
           json='${{ steps.test_9_release_notes_added.outputs.json_output }}'
@@ -161,7 +161,7 @@ jobs:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'fix: memory leak in parser'
-      
+
       - name: Verify test_10_release_notes_fixed
         run: |
           json='${{ steps.test_10_release_notes_fixed.outputs.json_output }}'
@@ -177,7 +177,7 @@ jobs:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'refactor!: redesign API'
-      
+
       - name: Verify test_11_release_notes_breaking
         run: |
           json='${{ steps.test_11_release_notes_breaking.outputs.json_output }}'
@@ -193,7 +193,7 @@ jobs:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'refactor: improve code quality'
-      
+
       - name: Verify test_12_release_notes_changed_refactor
         run: |
           json='${{ steps.test_12_release_notes_changed_refactor.outputs.json_output }}'
@@ -209,7 +209,7 @@ jobs:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'deprecate: old API endpoint'
-      
+
       - name: Verify test_13_release_notes_deprecated
         run: |
           json='${{ steps.test_13_release_notes_deprecated.outputs.json_output }}'
@@ -225,7 +225,7 @@ jobs:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'remove: legacy support'
-      
+
       - name: Verify test_14_release_notes_removed
         run: |
           json='${{ steps.test_14_release_notes_removed.outputs.json_output }}'
@@ -241,7 +241,7 @@ jobs:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'security: patch XSS vulnerability'
-      
+
       - name: Verify test_15_release_notes_security
         run: |
           json='${{ steps.test_15_release_notes_security.outputs.json_output }}'
@@ -257,7 +257,7 @@ jobs:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'random commit message'
-      
+
       - name: Verify test_16_maintenance_release
         run: |
           json='${{ steps.test_16_maintenance_release.outputs.json_output }}'
@@ -275,7 +275,7 @@ jobs:
             feat: feature A
             feat: feature B
             feat: feature C
-      
+
       - name: Verify test_17_multiple_items_section
         run: |
           json='${{ steps.test_17_multiple_items_section.outputs.json_output }}'
@@ -292,7 +292,7 @@ jobs:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'refactor(core)!: removed old API'
-      
+
       - name: Verify test_18a_breaking_exclamation
         run: |
           json='${{ steps.test_18a_breaking_exclamation.outputs.json_output }}'
@@ -311,7 +311,7 @@ jobs:
             refactor: restructure module
 
             BREAKING CHANGE: removed old API endpoint
-      
+
       - name: Verify test_18b_breaking_footer
         run: |
           json='${{ steps.test_18b_breaking_footer.outputs.json_output }}'
@@ -329,7 +329,7 @@ jobs:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'feat(auth): add multi-factor authentication'
-      
+
       - name: Verify test_20_scope_commit
         run: |
           json='${{ steps.test_20_scope_commit.outputs.json_output }}'
@@ -349,7 +349,7 @@ jobs:
             v1.0.0
           changelog_text: ''
           commits: ''
-      
+
       - name: Verify test_21_multiple_tags
         run: |
           json='${{ steps.test_21_multiple_tags.outputs.json_output }}'
