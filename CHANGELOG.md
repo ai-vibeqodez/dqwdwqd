@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 
 
+## [1.0.8] - 2026-11-25
+
+### Fixed
+
+- remove test file
+- remove test file
+
 ## [1.0.7] - 2026-11-25
 
 ### Fixed
