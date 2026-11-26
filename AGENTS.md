@@ -352,6 +352,17 @@ If empty — might be YAML escaping issue.
 
 ## Git & File Operations
 
+### Commits & Push Policy
+
+**Rule: Do not commit or push without explicit permission.**
+
+In this session, all agents are forbidden from:
+- Creating commits (even with `-m` or `--all`)
+- Pushing to remote (even to new branches)
+- Force-pushing or rewriting history
+
+Exception: User gives explicit "commit" or "push" command → proceed only with that command.
+
 ### File Permissions in Git
 
 If actions change file mode (executable bit), it's visible in git diff but not as content:
@@ -406,14 +417,54 @@ Called from actions-test, contains 21 test cases:
 - 3 edge cases (breaking in body, scopes, multiple tags)
 - 3 special cases tests
 
-### reusable-release (workflow_call)
+### reusable-resolve-version (workflow_call)
 
-Can be called by other projects' workflows to publish release:
+Called by projects to resolve SemVer and release notes from git history:
 ```yaml
 jobs:
-  - resolve_version: calls release__resolve_next_release_io
-  - build: compiles artifacts
-  - publish: calls release__write_release_files_io, creates git tag and GitHub release
+  resolve_version:
+    uses: central-repo/.github/workflows/reusable-resolve-version.yml@main
+    # Outputs: version, release_notes
+    # Contains: checkout + release__resolve_next_release_io action
+```
+
+### reusable-publish (workflow_call)
+
+Called by projects to publish artifacts and create GitHub release:
+```yaml
+jobs:
+  publish:
+    uses: central-repo/.github/workflows/reusable-publish.yml@main
+    with:
+      version: ${{ needs.resolve_version.outputs.version }}
+      release_notes: ${{ needs.resolve_version.outputs.release_notes }}
+    # Contains: checkout + write_release_files_io + git commit + git tag + gh release
+```
+
+### Project release.yml pattern (npm, C++, any project)
+
+Each project controls its own build; uses central workflows for version + publish:
+```yaml
+jobs:
+  resolve_version:
+    uses: central-repo/.github/workflows/reusable-resolve-version.yml@main
+  
+  build:  # Project-specific: npm, C++ matrix, Go, etc.
+    needs: resolve_version
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ...  # Optional: for C++ (gcc15, clang18)
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/build.sh
+      - uses: actions/upload-artifact@v4
+  
+  publish:
+    needs: [resolve_version, build]
+    uses: central-repo/.github/workflows/reusable-publish.yml@main
+    with:
+      version: ${{ needs.resolve_version.outputs.version }}
+      release_notes: ${{ needs.resolve_version.outputs.release_notes }}
 ```
 
 ---
@@ -494,6 +545,8 @@ grep -q "elements" || exit 1  # Other parts of string
 
 ## Summary
 
+### Component Layers
+
 | Component | When to use | Example |
 |-----------|------------|---------|
 | **_pure** | Calculations, parsing, data transformations | resolve_next_release_pure, write_release_files_pure |
@@ -501,4 +554,18 @@ grep -q "elements" || exit 1  # Other parts of string
 | **test__*_pure** | Test all scenarios of pure action | test__resolve_next_release_pure (21 test cases) |
 | **actions-test** | Run all tests, verify before release | on: workflow_dispatch |
 
-Result: **Maintainable, Testable, Deterministic, Debuggable Actions**
+### Reusable Workflows (Central Repo)
+
+| Workflow | Purpose | Used by | Contains |
+|----------|---------|---------|----------|
+| **reusable-resolve-version** | Resolve SemVer + release notes from git | All projects | checkout@v4 + release__resolve_next_release_io |
+| **reusable-publish** | Publish artifacts + create GitHub release | All projects | write_release_files_io + git commit/tag/push + gh release |
+
+### Project Pattern
+
+Each project (`npm`, `C++`, `Go`, etc.) implements identical workflow structure:
+- **resolve_version** → `uses: reusable-resolve-version@main`
+- **build** → project-specific (npm run build, C++ matrix, etc.)
+- **publish** → `uses: reusable-publish@main`
+
+Result: **Maintainable, Testable, Deterministic, Debuggable Actions** + **Reusable across projects**

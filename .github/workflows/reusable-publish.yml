@@ -30,6 +30,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: dist/
+          merge-multiple: true
 
       - name: Commit, Tag, Push & Create GitHub Release
         env:
@@ -48,4 +49,9 @@ jobs:
           git tag -a "v${VERSION}" -m "Release v${VERSION}"
           git push origin HEAD --follow-tags
 
-          gh release create "v${VERSION}" dist/* --title "v${VERSION}" --notes "$RELEASE_NOTES"
+          # Upload only files, skip directories
+          gh release create "v${VERSION}" --title "v${VERSION}" --notes "$RELEASE_NOTES"
+          
+          if [ -d dist ] && [ "$(find dist -type f | wc -l)" -gt 0 ]; then
+            find dist -type f -exec gh release upload "v${VERSION}" {} \;
+          fi
