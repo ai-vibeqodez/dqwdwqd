@@ -3,73 +3,21 @@
 ## Pure vs IO Architecture
 
 ### Concept
-Separation of components into two categories for better testability and maintainability:
+**Pure components** — deterministic functions without side effects. Same inputs → identical output. No I/O, no environment dependencies.
 
-**Pure components** — deterministic functions without side effects
-- Input: strings and structured data
-- Output: computed result
-- Guarantee: same inputs → always identical output
-- Zero side effects, zero environment dependencies
-
-**IO components** — environment interaction
-- Read files (git tags, CHANGELOG.md, VERSION)
-- Execute commands (git log, git describe, date)
-- Write files and determine state (line endings, date)
-- Call pure components with gathered data
-
-### Project Examples
-
-#### release__resolve_next_release_pure
-Pure function for versioning:
-```python
-def resolve_next_release_pure(raw_tags: str, changelog_text: str, commits: str) -> tuple[str, str]:
-    # Parse tags: "v1.2.3\nv1.0.0" → (1, 2, 3)
-    # Parse CHANGELOG: search ## [X.Y.Z]
-    # Analyze commits: conventional commits by types
-    # Return: (version, release_notes)
-    # 100% deterministic
-```
-
-#### release__resolve_next_release_io
-IO layer:
-```bash
-# Gather data:
-RAW_TAGS=$(git tag --merged HEAD --sort=-v:refname)
-CHANGELOG_TEXT=$(cat CHANGELOG.md || echo "")
-COMMITS=$(git log ... --pretty=format:%s)
-
-# Call pure:
-uses: ./.github/actions/release__resolve_next_release_pure@main
-with:
-  raw_tags: $RAW_TAGS
-  changelog_text: $CHANGELOG_TEXT
-  commits: $COMMITS
-```
+**IO components** — gather data (files, git commands, date), call pure components, write results.
 
 ---
 
 ## Naming Convention
 
-### Pattern
-```
-{domain}__{name}_{suffix}
-```
+Pattern: `{domain}__{name}_{suffix}`
 
-Suffixes at the end (not in the middle):
+Suffixes at the end:
 - `_pure` — deterministic function
 - `_io` — I/O layer
 
-### Examples ✓
-- `release__resolve_next_release_pure`
-- `release__resolve_next_release_io`
-- `release__write_release_files_pure`
-- `release__write_release_files_io`
-- `test__resolve_next_release_pure`
-- `test__write_release_files_pure`
-
-### Anti-examples ✗
-- ~~`release__pure_resolve_next_release`~~ (io/pure in the middle)
-- ~~`release__io_write_release_files`~~ (io/pure in the middle)
+Example: `release__resolve_next_release_pure`, `release__resolve_next_release_io`
 
 ---
 

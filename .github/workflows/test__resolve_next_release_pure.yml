@@ -285,25 +285,24 @@ jobs:
           echo "Found $count items listed"
           [[ $count -eq 3 ]] || exit 1
 
-      # Test 18: Breaking CHANGE with ! in scope
-      - id: test_18_breaking_body
+      # Test 18: Breaking changes (both ! in scope and BREAKING CHANGE footer)
+      - id: test_18a_breaking_exclamation
         uses: ai-vibeqodez/dqwdwqd/.github/actions/release__resolve_next_release_pure@main
         with:
           raw_tags: 'v1.0.0'
           changelog_text: ''
           commits: 'refactor(core)!: removed old API'
       
-      - name: Verify test_18_breaking_body
+      - name: Verify test_18a_breaking_exclamation
         run: |
-          json='${{ steps.test_18_breaking_body.outputs.json_output }}'
+          json='${{ steps.test_18a_breaking_exclamation.outputs.json_output }}'
           version=$(echo "$json" | jq -r '.version')
           notes=$(echo "$json" | jq -r '.release_notes')
-          echo "Test 18: Got version=$version, expected=2.0.0"
+          echo "Test 18a: Breaking with !"
           [[ "$version" == "2.0.0" ]] || exit 1
           echo "$notes" | grep -q "### Breaking" || exit 1
 
-      # Test 19: Breaking CHANGE in commit body (multiline)
-      - id: test_19_breaking_in_body
+      - id: test_18b_breaking_footer
         uses: ai-vibeqodez/dqwdwqd/.github/actions/release__resolve_next_release_pure@main
         with:
           raw_tags: 'v1.0.0'
@@ -313,12 +312,12 @@ jobs:
 
             BREAKING CHANGE: removed old API endpoint
       
-      - name: Verify test_19_breaking_in_body
+      - name: Verify test_18b_breaking_footer
         run: |
-          json='${{ steps.test_19_breaking_in_body.outputs.json_output }}'
+          json='${{ steps.test_18b_breaking_footer.outputs.json_output }}'
           version=$(echo "$json" | jq -r '.version')
           notes=$(echo "$json" | jq -r '.release_notes')
-          echo "Test 19: Got version=$version, expected=2.0.0"
+          echo "Test 18b: Breaking with BREAKING CHANGE footer"
           [[ "$version" == "2.0.0" ]] || exit 1
           echo "$notes" | grep -q "### Breaking" || exit 1
           echo "$notes" | grep -q "restructure module" || exit 1

@@ -29,8 +29,8 @@ def parse_commits(commits_str: str) -> list[str]:
     """Parse commits: handle both single-line and multiline formats.
     
     Cases:
-    1. Multiple single-line commits (each line is a commit): 'feat: A\nfeat: B\nfeat: C'
-    2. Multiline commits (commit + blank line + body): 'feat: A\n\nBREAKING CHANGE: ...\nfeat: B'
+    1. Multiple single-line commits: 'feat: A\nfeat: B'
+    2. Multiline commits (blank-line separated): 'feat: A\n\nBREAKING CHANGE: ...'
     3. Literal \\n from GitHub Actions env vars
     
     Returns list of commits where each may be multiline (subject + body).
@@ -38,32 +38,25 @@ def parse_commits(commits_str: str) -> list[str]:
     if not commits_str:
         return []
     
-    # Normalize: replace literal \n (from env vars) with actual newlines
     commits_str = commits_str.replace("\\n", "\n")
     
-    # Strategy: look for Conventional Commits pattern at line start (type: or type():)
-    # and group following lines (body) with the commit until next commit or end
+    # Group lines: start new commit on conventional commit pattern, keep body lines with it
     commits_list = []
-    lines = commits_str.split('\n')
     current_commit = []
     
-    for line in lines:
+    for line in commits_str.split('\n'):
         line_stripped = line.strip()
         
-        # Check if this line starts a new conventional commit (type: or type():)
+        # Detect conventional commit start (type: or type():)
         if re.match(r'^[a-z]+(?:\([^)]*\))?(?:!)?:', line_stripped, re.I):
-            # Save previous commit if exists
             if current_commit:
                 commits_list.append('\n'.join(current_commit))
-            # Start new commit
             current_commit = [line_stripped]
         elif current_commit:
-            # Add to current commit's body (or skip empty lines)
-            if line_stripped or current_commit[-1]:  # Include empty lines in body, but stop trailing
+            # Add line to current commit's body
+            if line_stripped or current_commit[-1]:
                 current_commit.append(line_stripped)
-        # else: skip leading empty lines before first commit
     
-    # Add last commit
     if current_commit:
         commits_list.append('\n'.join(current_commit).strip())
     
@@ -85,43 +78,36 @@ def compute_release(
         "revert": "Removed",
         "security": "Security",
     }
-    sections: dict[str, list[str]] = {
-        k: [] for k in ("Breaking", "Added", "Changed", "Deprecated", "Removed", "Fixed", "Security")
-    }
+    sections = {}  # On-demand initialization
 
-    # Join commits iterable into string if needed, then parse
     commits_str = "\n".join(commits) if isinstance(commits, list) else commits
     parsed_commits = parse_commits(commits_str)
 
     for commit_msg in parsed_commits:
-        # Check for BREAKING CHANGE anywhere in the commit (subject or body)
         is_breaking = "BREAKING CHANGE" in commit_msg
-        
-        # Get first line (subject) for regex matching
         first_line = commit_msg.split("\n")[0]
         
         if m := re.match(r"^(?P<type>[a-z]+)(?:\([^)]*\))?(?P<bang>!)?:\s*(?P<desc>.+)$", first_line.strip(), re.I):
             desc = m["desc"].strip()
-            # Check for breaking: either ! in commit or BREAKING CHANGE in body
             if m["bang"] or is_breaking:
-                sections["Breaking"].append(desc)
+                sections.setdefault("Breaking", []).append(desc)
             elif cat := type_map.get(m["type"].lower()):
-                sections[cat].append(desc)
+                sections.setdefault(cat, []).append(desc)
 
-    if not any(sections.values()):
-        sections["Changed"].append("Maintenance release")
+    if not sections:
+        sections["Changed"] = ["Maintenance release"]
 
-    if sections["Breaking"]:
+    if sections.get("Breaking"):
         next_version = f"{major + 1}.0.0"
-    elif sections["Added"]:
+    elif sections.get("Added"):
         next_version = f"{major}.{minor + 1}.0"
     else:
         next_version = f"{major}.{minor}.{patch + 1}"
 
+    section_order = ("Breaking", "Added", "Changed", "Deprecated", "Removed", "Fixed", "Security")
     release_notes = "\n\n".join(
-        f"### {cat}\n\n" + "\n".join(f"- {i}" for i in items)
-        for cat, items in sections.items()
-        if items
+        f"### {cat}\n\n" + "\n".join(f"- {i}" for i in sections[cat])
+        for cat in section_order if cat in sections
     )
     return next_version, release_notes
 

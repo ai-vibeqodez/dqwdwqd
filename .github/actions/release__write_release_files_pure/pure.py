@@ -37,21 +37,6 @@ def render_updated_changelog(
     return content.rstrip() + "\n\n" + release_block + "\n"
 
 
-def apply_line_ending(content: str, preserve_crlf: bool) -> str:
-    """Convert line endings if needed.
-    
-    Args:
-        content: Content with LF line endings
-        preserve_crlf: If True, convert LF to CRLF
-    
-    Returns:
-        Content with appropriate line endings
-    """
-    if preserve_crlf:
-        return content.replace("\n", "\r\n")
-    return content
-
-
 if __name__ == "__main__":
     import json
     
@@ -73,13 +58,17 @@ if __name__ == "__main__":
         release_date,
     )
     
-    # Apply line endings
-    changelog_output = apply_line_ending(updated_changelog, preserve_crlf)
-    version_output = apply_line_ending(f"{version}\n", preserve_crlf)
+    # Apply line endings (inline)
+    if preserve_crlf:
+        changelog_output = updated_changelog.replace("\n", "\r\n")
+        version_output = version.replace("\n", "\r\n")
+    else:
+        changelog_output = updated_changelog
+        version_output = version
     
     # Create output object
     output = {
-        "version": version_output.strip(),
+        "version": version_output,
         "changelog": changelog_output
     }
     

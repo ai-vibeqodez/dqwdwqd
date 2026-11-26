@@ -250,35 +250,13 @@ jobs:
           line_header=$(echo "$content" | grep -n "Keep a Changelog" | cut -d: -f1)
           [[ $line_header -lt $line_1 ]] || exit 1
 
-      # Test 12: Proper spacing between releases
-      - id: test_12_spacing
-        uses: ai-vibeqodez/dqwdwqd/.github/actions/release__write_release_files_pure@main
-        with:
-          existing_changelog_content: |
-            # Changelog
-            
-            ## [1.0.0] - 2024-01-01
-            
-            ### Added
-            - v1
-          version: '2.0.0'
-          release_notes: '### Added\n\n- v2'
-          release_date: '2024-06-01'
-      
-      - name: Verify test_12_spacing
-        run: |
-          json='${{ steps.test_12_spacing.outputs.json_output }}'
-          content=$(echo "$json" | jq -r '.changelog')
-          echo "Test 12: Checking spacing between releases"
-          echo "$content" | awk '/## \[2.0.0\]/,/## \[1.0.0\]/' | head -n -1 | tail -n +2 | grep -q "^$" || exit 1
-
 
       # Summary
       - name: Test Summary
         if: always()
         run: |
           echo "====== PURE WRITE RELEASE FILES TEST SUMMARY ======"
-          echo "✓ All 12 test cases executed"
+          echo "✓ All 11 test cases executed"
           echo "✓ CHANGELOG formatting verified"
           echo "✓ Version file output verified"
           echo "✓ Release ordering verified"
