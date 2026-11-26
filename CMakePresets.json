@@ -117,10 +117,9 @@
       "name": "msvc-base",
       "hidden": true,
       "inherits": "base",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl"
-      }
+      "generator": "Visual Studio 18 2026",
+      "architecture": "x64",
+      "cacheVariables": {}
     },
     {
       "name": "msvc-debug",
@@ -140,8 +139,8 @@
     { "name": "clang18-libcxx-release", "configurePreset": "clang18-libcxx-release" },
     { "name": "clang18-libstdcxx-debug", "configurePreset": "clang18-libstdcxx-debug" },
     { "name": "clang18-libstdcxx-release", "configurePreset": "clang18-libstdcxx-release" },
-    { "name": "msvc-debug", "configurePreset": "msvc-debug" },
-    { "name": "msvc-release", "configurePreset": "msvc-release" }
+    { "name": "msvc-debug", "configurePreset": "msvc-debug", "configuration": "Debug" },
+    { "name": "msvc-release", "configurePreset": "msvc-release", "configuration": "Release" }
   ],
   "testPresets": [
     {
@@ -172,7 +171,8 @@
     { "name": "clang18-libcxx-release", "inherits": "test-base", "configurePreset": "clang18-libcxx-release" },
     { "name": "clang18-libstdcxx-debug", "inherits": "test-base", "configurePreset": "clang18-libstdcxx-debug" },
     { "name": "clang18-libstdcxx-release", "inherits": "test-base", "configurePreset": "clang18-libstdcxx-release" },
-    { "name": "msvc-debug", "inherits": "test-base", "configurePreset": "msvc-debug" },
-    { "name": "msvc-release", "inherits": "test-base", "configurePreset": "msvc-release" }
+    { "name": "msvc-debug", "inherits": "test-base", "configurePreset": "msvc-debug", "configuration": "Debug" },
+    { "name": "msvc-release", "inherits": "test-base", "configurePreset": "msvc-release", "configuration": "Release" }
   ]
+
 }

@@ -1,5 +1,5 @@
 VERSION ?= 0.0.1
-PRESET  ?= msvc-release
+PRESET  ?= msvc-debug
 
 CLANG_FORMAT ?= clang-format-18
 CLANG_TIDY   ?= clang-tidy-18
@@ -10,6 +10,8 @@ CPP_EXT_REGEX := \.($(subst $(eval) ,|,$(CPP_EXTS)))$$
 
 CPP_FILES        := $(shell find src include tests -type f \( -false $(CPP_FIND_ARGS) \) 2>/dev/null)
 STAGED_CPP_FILES := $(shell git diff --cached --name-only --diff-filter=ACMR 2>/dev/null | grep -E '$(CPP_EXT_REGEX)' || true)
+
+CMAKE_INSTALL_CONFIG := $(if $(findstring debug,$(PRESET)),Debug,Release)
 
 .PHONY: help format format-staged lint lint-staged build test asan tsan clean
 
@@ -72,7 +74,7 @@ lint-staged:
 build:
 	cmake --preset $(PRESET)
 	cmake --build --preset $(PRESET) --parallel
-	cmake --install build/$(PRESET) --prefix dist/$(PRESET)
+	cmake --install build/$(PRESET) --config $(CMAKE_INSTALL_CONFIG) --prefix dist/$(PRESET)
 
 test:
 	ctest --preset $(PRESET) --output-on-failure
