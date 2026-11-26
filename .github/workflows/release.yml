@@ -7,5 +7,28 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable-release.yml@main
+  resolve_version:
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable-resolve-version.yml@main
+
+  build:
+    needs: resolve_version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build (Stub)
+        run: |
+          mkdir -p dist
+          echo "reusable workflows v${{ needs.resolve_version.outputs.version }}" > dist/README.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: central-build
+          path: dist/
+
+  publish:
+    needs: [resolve_version, build]
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable-publish.yml@main
+    with:
+      version: ${{ needs.resolve_version.outputs.version }}
+      release_notes: ${{ needs.resolve_version.outputs.release_notes }}

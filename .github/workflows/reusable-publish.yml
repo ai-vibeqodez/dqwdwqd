@@ -1,0 +1,51 @@
+name: reusable-publish
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+      release_notes:
+        type: string
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update VERSION and CHANGELOG.md
+        uses: ai-vibeqodez/dqwdwqd/.github/actions/release__write_release_files_io@main
+        with:
+          version: ${{ inputs.version }}
+          release_notes: ${{ inputs.release_notes }}
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+
+      - name: Commit, Tag, Push & Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git add VERSION CHANGELOG.md
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "chore(release): ${VERSION}"
+          fi
+
+          git tag -a "v${VERSION}" -m "Release v${VERSION}"
+          git push origin HEAD --follow-tags
+
+          gh release create "v${VERSION}" dist/* --title "v${VERSION}" --notes "$RELEASE_NOTES"
