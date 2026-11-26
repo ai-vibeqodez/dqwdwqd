@@ -1,4 +1,4 @@
-# ── TOOD: FIXME ─────────────────────────────────────────────────────────────
+# ── Reusable Makefile ──────────────────────────────────────────────────────
 # Everyday build targets.
 #
 #   make lint | build | test | clean
@@ -7,8 +7,17 @@
 #   make lint
 #   make build
 #   make test
+#   make build PRESET=gcc-15-debug
+#   make build PRESET=gcc-15-release
+#   make build PRESET=msvc-debug
+#   make build PRESET=msvc-release
+#   make build PRESET=clang18-libcxx-debug
+#   make build PRESET=clang18-libcxx-release
+#   make build PRESET=clang18-libstdcxx-debug
+#   make build PRESET=clang18-libstdcxx-release
 
 VERSION ?= 0.0.1
+PRESET  ?= msvc-release
 
 .PHONY: lint build test clean
 
@@ -17,10 +26,11 @@ lint:
 
 build:
 	mkdir -p dist
-	echo "reusable workflows v${VERSION}" > dist/README.txt
+	echo "cmake --preset ${PRESET}"
+	echo "reusable workflows v${VERSION} (${PRESET})" > dist/README_${PRESET}.txt
 
 test:
 	echo "OK"
 
 clean:
-	rm -rf build
+	rm -rf build dist

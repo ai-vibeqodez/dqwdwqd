@@ -13,11 +13,9 @@ jobs:
 
   build:
     needs: resolve_version
-    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__common__build.yml@main
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__common__build_cpp23.yml@main
     with:
-      build_cmd: |
-        echo "${{ needs.resolve_version.outputs.version }}" > VERSION
-        make build VERSION=${{ needs.resolve_version.outputs.version }}
+      new_version_number: ${{ needs.resolve_version.outputs.version }}
 
   publish:
     needs: [resolve_version, build]
