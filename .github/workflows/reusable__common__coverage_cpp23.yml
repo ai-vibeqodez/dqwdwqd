@@ -87,6 +87,8 @@ jobs:
             echo "✗ .ci-actions NOT FOUND"
             exit 1
           fi
+
+      - name: Build
         shell: bash
         run: ${{ inputs.build_cmd }}
 
