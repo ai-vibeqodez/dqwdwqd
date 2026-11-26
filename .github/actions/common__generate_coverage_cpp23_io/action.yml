@@ -29,6 +29,10 @@ inputs:
     description: 'Generate stub output without requiring .gcda files (for fast CI debugging)'
     required: false
     default: 'true'
+  gcovr_flags:
+    description: 'Additional gcovr flags (e.g. "--exclude-unreachable-branches --exclude-throw-branches --branches")'
+    required: false
+    default: '--gcov-ignore-errors=no_working_dir_found --exclude-unreachable-branches --exclude-throw-branches'
 outputs:
   xml_path:
     value: ${{ steps.coverage.outputs.xml_path }}
@@ -49,6 +53,7 @@ runs:
         INPUT_OUTPUT_DIR: ${{ inputs.output_dir }}
         INPUT_XML_PATH: ${{ inputs.xml_path }}
         INPUT_STUB: ${{ inputs.stub }}
+        INPUT_GCOVR_FLAGS: ${{ inputs.gcovr_flags }}
       run: |-
         import os
         import sys
@@ -56,13 +61,14 @@ runs:
         import xml.etree.ElementTree as ET
         from pathlib import Path
 
-        SOURCE_DIR = os.environ.get('INPUT_SOURCE_DIR', '.')
-        BUILD_DIR = os.environ.get('INPUT_BUILD_DIR', 'build')
-        SOURCE_FILTER = os.environ.get('INPUT_SOURCE_FILTER', '')
-        EXCLUDE = os.environ.get('INPUT_EXCLUDE', '_deps/*')
-        OUTPUT_DIR = os.environ.get('INPUT_OUTPUT_DIR', 'htmlcov')
-        XML_PATH = os.environ.get('INPUT_XML_PATH', 'coverage.xml')
-        STUB = os.environ.get('INPUT_STUB', 'true').lower() == 'true'
+        SOURCE_DIR = os.environ['INPUT_SOURCE_DIR']
+        BUILD_DIR = os.environ['INPUT_BUILD_DIR']
+        SOURCE_FILTER = os.environ['INPUT_SOURCE_FILTER']
+        EXCLUDE = os.environ['INPUT_EXCLUDE']
+        OUTPUT_DIR = os.environ['INPUT_OUTPUT_DIR']
+        XML_PATH = os.environ['INPUT_XML_PATH']
+        STUB = os.environ['INPUT_STUB'].lower() == 'true'
+        GCOVR_FLAGS = os.environ['INPUT_GCOVR_FLAGS']
 
         def generate_stub_xml(xml_path: str) -> None:
             path = Path(xml_path)
@@ -140,14 +146,12 @@ runs:
             if exclude:
                 cmd.extend(['--exclude', exclude])
 
-            cmd.extend([
-                '--gcov-executable', gcov_cmd,
-                '--gcov-ignore-errors=no_working_dir_found',
-                '--exclude-unreachable-branches',
-                '--exclude-throw-branches',
-                '--xml', xml_path,
-                '--html-details', f'{output_dir}/index.html',
-            ])
+            cmd.extend(['--gcov-executable', gcov_cmd])
+
+            if GCOVR_FLAGS:
+                cmd.extend(GCOVR_FLAGS.split())
+
+            cmd.extend(['--xml', xml_path, '--html-details', f'{output_dir}/index.html'])
 
             subprocess.run(cmd, check=True)
 
