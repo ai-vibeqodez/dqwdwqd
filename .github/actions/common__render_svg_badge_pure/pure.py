@@ -22,35 +22,33 @@ def render_svg_badge(
       QUARTER_WIDTH = width / 4
       THREE_QUARTERS = 3 * width / 4
     """
-    half_width = width / 2
-    quarter_width = width / 4
-    three_quarters = 3 * width / 4
+    half_width = width // 2
+    quarter_width = width // 4
+    three_quarters = (width * 3) // 4
     
-    # Approximate character width (monospace baseline)
-    char_width = 6
-    text_left_x = int(quarter_width - len(text_left) * char_width / 2)
-    text_right_x = int(three_quarters - len(text_right) * char_width / 2)
-    text_y = int(height / 2 + 3)  # Vertical center + baseline adjustment
+    # Text baseline for height 20 is y="15" (SVG coordinate system)
+    # Adjust based on actual height: y = height - 5
+    text_y = height - 5
     
-    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="{width}" height="{height}">
-  <linearGradient id="b" x2="0" y2="100%">
-    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
-    <stop offset="1" stop-opacity=".1"/>
-  </linearGradient>
-  <clipPath id="r">
-    <rect width="{width}" height="{height}" rx="3" fill="#fff"/>
-  </clipPath>
-  <g clip-path="url(#r)">
-    <rect width="{half_width}" height="{height}" fill="{bg_color_left}"/>
-    <rect x="{half_width}" width="{half_width}" height="{height}" fill="{bg_color_right}"/>
-    <rect width="{width}" height="{height}" fill="url(#b)"/>
-  </g>
-  <g fill="{text_color}" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="11">
-    <text aria-hidden="true" x="{text_left_x}" y="{text_y}" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="{(len(text_left) * char_width - 10) * 10}">{text_left}</text>
-    <text x="{text_left_x}" y="{text_y - 1}" transform="scale(.1)" fill="{text_color}" textLength="{(len(text_left) * char_width - 10) * 10}">{text_left}</text>
-    <text aria-hidden="true" x="{text_right_x}" y="{text_y}" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="{(len(text_right) * char_width - 10) * 10}">{text_right}</text>
-    <text x="{text_right_x}" y="{text_y - 1}" transform="scale(.1)" fill="{text_color}" textLength="{(len(text_right) * char_width - 10) * 10}">{text_right}</text>
-  </g>
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">
+    <linearGradient id="b" x2="0" y2="100%">
+        <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+        <stop offset="1" stop-opacity=".1"/>
+    </linearGradient>
+    <mask id="a">
+        <rect width="{width}" height="{height}" rx="3" fill="#fff"/>
+    </mask>
+    <g mask="url(#a)">
+        <rect width="{half_width}" height="{height}" fill="{bg_color_left}"/>
+        <rect x="{half_width}" width="{half_width}" height="{height}" fill="{bg_color_right}"/>
+        <rect width="{width}" height="{height}" fill="url(#b)"/>
+    </g>
+    <g fill="{text_color}" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+        <text x="{quarter_width}" y="{text_y + 1}" fill="#010101" fill-opacity=".3">{text_left}</text>
+        <text x="{quarter_width}" y="{text_y}">{text_left}</text>
+        <text x="{three_quarters}" y="{text_y + 1}" fill="#010101" fill-opacity=".3">{text_right}</text>
+        <text x="{three_quarters}" y="{text_y}">{text_right}</text>
+    </g>
 </svg>'''
     
     return svg
