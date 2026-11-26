@@ -41,7 +41,7 @@ runs:
   steps:
     - id: coverage
       shell: bash
-      run: python3 "${{ github.action_path }}/generate.py"
+      run: python3 "$GITHUB_ACTION_PATH/generate.py"
       env:
         INPUT_SOURCE_DIR: ${{ inputs.source_dir }}
         INPUT_BUILD_DIR: ${{ inputs.build_dir }}
