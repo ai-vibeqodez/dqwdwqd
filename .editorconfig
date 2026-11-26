@@ -25,6 +25,6 @@ indent_size = 2
 indent_style = space
 indent_size = 2
 
-[*.{js,ts,py,cs,c,cpp,h,hpp,java,go,rs}]
+[*.{ts,js,py,cs,c,cpp,h,hpp,java,go,rs}]
 indent_style = space
 indent_size = 4
