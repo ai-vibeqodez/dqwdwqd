@@ -22,8 +22,9 @@ jobs:
           version_source: 'git_tags'
       - name: Verify git_tags source
         run: |
-          version=$(echo '${{ steps.resolve.outputs.version }}' | jq -r '.version // empty')
-          [[ -n "$version" ]] && echo "✓ git_tags source works: $version" || exit 1
+          version="${{ steps.resolve.outputs.version }}"
+          echo "Got version: $version"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo "✓ git_tags source works: $version" || exit 1
 
   test_version_file:
     runs-on: ubuntu-latest
@@ -38,8 +39,9 @@ jobs:
           version_file_path: 'VERSION'
       - name: Verify version_file source
         run: |
-          version=$(echo '${{ steps.resolve.outputs.version }}' | jq -r '.version // empty')
-          [[ -n "$version" ]] && echo "✓ version_file source works: $version" || exit 1
+          version="${{ steps.resolve.outputs.version }}"
+          echo "Got version: $version"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo "✓ version_file source works: $version" || exit 1
 
   test_package_json:
     runs-on: ubuntu-latest
@@ -60,8 +62,9 @@ jobs:
           version_source: 'package_json'
       - name: Verify package_json source
         run: |
-          version=$(echo '${{ steps.resolve.outputs.version }}' | jq -r '.version // empty')
-          [[ -n "$version" ]] && echo "✓ package_json source works: $version" || exit 1
+          version="${{ steps.resolve.outputs.version }}"
+          echo "Got version: $version"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo "✓ package_json source works: $version" || exit 1
 
   test_cargo_toml:
     runs-on: ubuntu-latest
@@ -81,8 +84,9 @@ jobs:
           version_source: 'cargo_toml'
       - name: Verify cargo_toml source
         run: |
-          version=$(echo '${{ steps.resolve.outputs.version }}' | jq -r '.version // empty')
-          [[ -n "$version" ]] && echo "✓ cargo_toml source works: $version" || exit 1
+          version="${{ steps.resolve.outputs.version }}"
+          echo "Got version: $version"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo "✓ cargo_toml source works: $version" || exit 1
 
   test_default_git_tags:
     runs-on: ubuntu-latest
@@ -99,8 +103,9 @@ jobs:
         uses: ai-vibeqodez/dqwdwqd/.github/actions/release__resolve_next_release_io@main
       - name: Verify default is git_tags
         run: |
-          version=$(echo '${{ steps.resolve.outputs.version }}' | jq -r '.version // empty')
-          [[ -n "$version" ]] && echo "✓ default (git_tags) works: $version" || exit 1
+          version="${{ steps.resolve.outputs.version }}"
+          echo "Got version: $version"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo "✓ default (git_tags) works: $version" || exit 1
 
   summary:
     runs-on: ubuntu-latest
