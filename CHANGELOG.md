@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 
 
+## [1.0.14] - 2026-11-26
+
+### Fixed
+
+- fixes
+- fixes
+
 ## [1.0.13] - 2026-11-26
 
 ### Fixed
