@@ -9,6 +9,10 @@ on:
       release_notes:
         type: string
         required: true
+      release_notes_footer:
+        type: string
+        required: false
+        default: ''
 
 jobs:
   publish:
@@ -37,6 +41,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
           RELEASE_NOTES: ${{ inputs.release_notes }}
+          RELEASE_NOTES_FOOTER: ${{ inputs.release_notes_footer }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
@@ -49,8 +54,15 @@ jobs:
           git tag -a "v${VERSION}" -m "Release v${VERSION}"
           git push origin HEAD --follow-tags
 
+          # Combine release notes with footer
+          if [ -n "$RELEASE_NOTES_FOOTER" ]; then
+            NOTES="$(printf '%s\n\n%s' "$RELEASE_NOTES" "$RELEASE_NOTES_FOOTER")"
+          else
+            NOTES="$RELEASE_NOTES"
+          fi
+
           # Upload only files, skip directories
-          gh release create "v${VERSION}" --title "v${VERSION}" --notes "$RELEASE_NOTES"
+          gh release create "v${VERSION}" --title "v${VERSION}" --notes "$NOTES"
 
           if [ -d dist ] && [ "$(find dist -type f | wc -l)" -gt 0 ]; then
             find dist -type f -exec gh release upload "v${VERSION}" {} \;
