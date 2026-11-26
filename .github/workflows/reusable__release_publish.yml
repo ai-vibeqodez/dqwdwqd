@@ -9,6 +9,18 @@ on:
       release_notes:
         type: string
         required: true
+      git_user_name:
+        type: string
+        required: false
+        default: 'github-actions[bot]'
+      git_user_email:
+        type: string
+        required: false
+        default: 'github-actions[bot]@users.noreply.github.com'
+      commit_message_prefix:
+        type: string
+        required: false
+        default: 'chore(release)'
       release_notes_footer:
         type: string
         required: false
@@ -41,14 +53,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
           RELEASE_NOTES: ${{ inputs.release_notes }}
+          GIT_USER_NAME: ${{ inputs.git_user_name }}
+          GIT_USER_EMAIL: ${{ inputs.git_user_email }}
+          COMMIT_MSG_PREFIX: ${{ inputs.commit_message_prefix }}
           RELEASE_NOTES_FOOTER: ${{ inputs.release_notes_footer }}
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config user.name "$GIT_USER_NAME"
+          git config user.email "$GIT_USER_EMAIL"
 
           git add VERSION CHANGELOG.md
           if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "chore(release): ${VERSION}"
+            git commit -m "${COMMIT_MSG_PREFIX}: ${VERSION}"
           fi
 
           git tag -a "v${VERSION}" -m "Release v${VERSION}"
