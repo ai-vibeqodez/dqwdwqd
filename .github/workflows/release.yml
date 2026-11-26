@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   resolve_version:
-    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__release_resolve_version.yml@main
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__release__resolve_version.yml@main
 
   build:
     needs: resolve_version
@@ -29,7 +29,7 @@ jobs:
 
   publish:
     needs: [resolve_version, build]
-    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__release_publish.yml@main
+    uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__release__publish.yml@main
     with:
       version: ${{ needs.resolve_version.outputs.version }}
       release_notes: ${{ needs.resolve_version.outputs.release_notes }}

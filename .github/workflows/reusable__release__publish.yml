@@ -1,4 +1,4 @@
-name: reusable__release_publish
+name: reusable__release__publish
 
 on:
   workflow_call:

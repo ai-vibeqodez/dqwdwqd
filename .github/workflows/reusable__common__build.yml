@@ -1,4 +1,4 @@
-name: reusable__release_resolve_version
+name: reusable__release__resolve_version
 
 on:
   workflow_call:
