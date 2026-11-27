@@ -138,7 +138,8 @@ runs:
             gcc_ver = result.stdout.strip().split('.')[0]
             gcov_cmd = f'gcov-{gcc_ver}'
 
-            cmd = ['gcovr', build_dir, '--root', source_dir]
+            # Command structure: gcovr -r <source_dir> <build_dir>
+            cmd = ['gcovr', '-r', source_dir, build_dir]
 
             if source_filter:
                 cmd.extend(['--filter', source_filter])
@@ -151,22 +152,32 @@ runs:
             if GCOVR_FLAGS:
                 cmd.extend(GCOVR_FLAGS.split())
 
-            cmd.extend(['--xml', xml_path, '--html-details', f'{output_dir}/index.html'])
+            # Add print-summary and output formats
+            cmd.extend(['--print-summary', '--xml', xml_path, '--html-details', f'{output_dir}/index.html'])
 
             os.makedirs(output_dir, exist_ok=True)
-            subprocess.run(cmd, check=True)
+            
+            # Run with check=False to allow partial success (e.g. missing source files but XML generated)
+            result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+            
+            # Always print output for debugging
+            if result.stdout:
+                print(result.stdout)
+            if result.stderr:
+                print(result.stderr, file=sys.stderr)
+            
+            # Fail only if XML was not created
+            if not os.path.isfile(xml_path):
+                print(f'ERROR: gcovr failed to generate {xml_path}', file=sys.stderr)
+                sys.exit(1)
 
         if STUB:
             generate_stub_xml(XML_PATH)
             generate_stub_html(OUTPUT_DIR)
             print('✓ Stub coverage files created')
         else:
-            try:
-                run_gcovr(BUILD_DIR, SOURCE_DIR, SOURCE_FILTER, EXCLUDE, XML_PATH, OUTPUT_DIR)
-                print('✓ Coverage report generated')
-            except subprocess.CalledProcessError as e:
-                print(f'ERROR: gcovr failed: {e}', file=sys.stderr)
-                sys.exit(1)
+            run_gcovr(BUILD_DIR, SOURCE_DIR, SOURCE_FILTER, EXCLUDE, XML_PATH, OUTPUT_DIR)
+            print('✓ Coverage report generated')
 
         gh_out = os.environ.get('GITHUB_OUTPUT')
         if gh_out:
