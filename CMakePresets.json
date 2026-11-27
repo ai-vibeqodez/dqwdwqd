@@ -50,7 +50,8 @@
       "inherits": "gcc-15-debug",
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "-O0 -g --coverage",
-        "CMAKE_EXE_LINKER_FLAGS": "--coverage"
+        "CMAKE_EXE_LINKER_FLAGS": "--coverage",
+        "COVERAGE_GCOV_EXECUTABLE": "gcov-15"
       }
     },
     {

@@ -99,15 +99,24 @@ coverage:
 	$(MAKE) test PRESET=$(COVERAGE_PRESET)
 	@if command -v gcovr >/dev/null 2>&1; then \
 		mkdir -p htmlcov; \
-		FILTER_ARGS=""; \
+		GCOV_CMD=$$(grep '^COVERAGE_GCOV_EXECUTABLE' build/$(COVERAGE_PRESET)/CMakeCache.txt 2>/dev/null | cut -d= -f2); \
+		if [ -z "$$GCOV_CMD" ]; then \
+			GCOV_CMD="gcov"; \
+		fi; \
+		if ! command -v $$GCOV_CMD >/dev/null 2>&1; then \
+			echo "ERROR: $$GCOV_CMD not found"; \
+			exit 1; \
+		fi; \
+		PWD_ABS=$$(pwd); \
+		FILTER_ARGS="--filter $$PWD_ABS/src/ --filter $$PWD_ABS/include/"; \
 		if [ -n "$(GCOVR_FILTER)" ]; then \
-			FILTER_ARGS="--filter $(GCOVR_FILTER)"; \
+			FILTER_ARGS="$$FILTER_ARGS --filter $$PWD_ABS/$(GCOVR_FILTER)"; \
 		fi; \
-		EXCLUDE_ARGS="--exclude _deps"; \
+		EXCLUDE_ARGS=""; \
 		if [ -n "$(GCOVR_EXCLUDE)" ]; then \
-			EXCLUDE_ARGS="$$EXCLUDE_ARGS --exclude $(GCOVR_EXCLUDE)"; \
+			EXCLUDE_ARGS="--exclude $(GCOVR_EXCLUDE)"; \
 		fi; \
-		gcovr -r . build/$(COVERAGE_PRESET) $$FILTER_ARGS $$EXCLUDE_ARGS --gcov-ignore-errors=no_working_dir_found --exclude-unreachable-branches --exclude-throw-branches --print-summary --xml coverage.xml --html-details htmlcov/index.html; \
+		gcovr -r . build/$(COVERAGE_PRESET) --gcov-executable $$GCOV_CMD $$FILTER_ARGS $$EXCLUDE_ARGS --gcov-ignore-errors=no_working_dir_found --exclude-unreachable-branches --exclude-throw-branches --print-summary --xml coverage.xml --html-details htmlcov/index.html; \
 		echo "✓ Coverage report: htmlcov/index.html"; \
 	else \
 		echo "ERROR: gcovr not found"; \
