@@ -1,20 +1,30 @@
 VERSION ?= 0.0.1
 PRESET  ?= msvc-debug
 
-COVERAGE_PRESET ?= gcc-15-coverage
-ASAN_PRESET     ?= gcc-15-asan
-TSAN_PRESET     ?= gcc-15-tsan
-
+# ── Format & Lint ──
 CLANG_FORMAT ?= clang-format-18
 CLANG_TIDY   ?= clang-tidy-18
+LINT_PRESET  ?= clang18-libcxx-debug
 
+# ── Coverage ──
+COVERAGE_PRESET ?= gcc-15-coverage
+
+# ── Sanitizers ──
+ASAN_PRESET ?= gcc-15-asan
+TSAN_PRESET ?= gcc-15-tsan
+
+# ── File discovery ──
 CPP_EXTS      := cpp cxx c hpp hxx h
 CPP_FIND_ARGS := $(patsubst %,-o -name '*.%',$(CPP_EXTS))
 CPP_EXT_REGEX := \.($(subst $(eval) ,|,$(CPP_EXTS)))$$
+SRC_EXTS      := cpp cxx c
 
 # Deferred: not evaluated until the variable is used, so `make clean` doesn't run find/git
 CPP_FILES        = $(shell find src include tests -type f \( -false $(CPP_FIND_ARGS) \) 2>/dev/null)
 STAGED_CPP_FILES = $(shell git diff --cached --name-only --diff-filter=ACMR 2>/dev/null | grep -E '$(CPP_EXT_REGEX)' || true)
+
+# Source files only (exclude headers) for clang-tidy to avoid false positives
+CPP_SOURCE_FILES = $(shell find src tests -type f \( -false $(patsubst %,-o -name '*.%',$(SRC_EXTS)) \) 2>/dev/null)
 
 # Debug/Release install config: check for explicit -debug suffix to avoid false matches
 CMAKE_INSTALL_CONFIG := $(if $(filter %-debug,$(PRESET)),Debug,Release)
@@ -28,8 +38,8 @@ help:
 	@echo "  make help           Show this help message"
 	@echo "  make format         Format all C/C++ files with clang-format"
 	@echo "  make format-staged  Format staged C/C++ files and re-add to git"
-	@echo "  make lint           Run clang-format check and clang-tidy"
-	@echo "  make lint-staged    Run lint checks on staged C/C++ files"
+	@echo "  make lint           Run clang-format check and clang-tidy ($(LINT_PRESET))"
+	@echo "  make lint-staged    Run lint checks on staged C/C++ files ($(LINT_PRESET))"
 	@echo "  make build          Configure, build, and install (uses PRESET)"
 	@echo "  make test           Run ctest suite (uses PRESET)"
 	@echo "  make asan           Build and run tests with ASan + UBSan ($(ASAN_PRESET))"
@@ -61,10 +71,13 @@ format-staged:
 	fi
 
 lint:
-	@if [ -n "$(CPP_FILES)" ]; then \
+	@if [ ! -f "build/$(LINT_PRESET)/compile_commands.json" ]; then \
+		echo "Generating compile_commands.json for linting..."; \
+		cmake --preset $(LINT_PRESET); \
+	fi
+	@if [ -n "$(CPP_SOURCE_FILES)" ]; then \
 		$(CLANG_FORMAT) --dry-run --Werror $(CPP_FILES); \
-		cmake --preset $(PRESET); \
-		$(CLANG_TIDY) -p build/$(PRESET) --warnings-as-errors='*' $(CPP_FILES); \
+		$(CLANG_TIDY) -p build/$(LINT_PRESET) --warnings-as-errors='*' $(CPP_SOURCE_FILES); \
 	else \
 		echo "OK"; \
 	fi
@@ -72,8 +85,14 @@ lint:
 lint-staged:
 	@if [ -n "$(STAGED_CPP_FILES)" ]; then \
 		$(CLANG_FORMAT) --dry-run --Werror $(STAGED_CPP_FILES); \
-		cmake --preset $(PRESET); \
-		$(CLANG_TIDY) -p build/$(PRESET) --warnings-as-errors='*' $(STAGED_CPP_FILES); \
+		if [ ! -f "build/$(LINT_PRESET)/compile_commands.json" ]; then \
+			echo "Generating compile_commands.json for linting..."; \
+			cmake --preset $(LINT_PRESET); \
+		fi; \
+		STAGED_SRC=$$(echo "$(STAGED_CPP_FILES)" | tr ' ' '\n' | grep -E '\.($(subst $(eval) ,|,$(SRC_EXTS)))$$' || true); \
+		if [ -n "$$STAGED_SRC" ]; then \
+			$(CLANG_TIDY) -p build/$(LINT_PRESET) --warnings-as-errors='*' $$STAGED_SRC; \
+		fi; \
 	else \
 		echo "No staged C/C++ files to lint"; \
 	fi
@@ -134,4 +153,4 @@ coverage:
 	echo "✓ Coverage report: htmlcov/index.html"
 
 clean:
-	rm -rf build dist
+	rm -rf build dist htmlcov coverage.xml
