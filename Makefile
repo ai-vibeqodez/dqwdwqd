@@ -75,21 +75,24 @@ lint:
 		echo "Generating compile_commands.json for linting..."; \
 		cmake --preset $(LINT_PRESET); \
 	fi
-	@if [ -n "$(CPP_SOURCE_FILES)" ]; then \
+	@if [ -n "$(CPP_FILES)" ]; then \
 		$(CLANG_FORMAT) --dry-run --Werror $(CPP_FILES); \
+	fi
+	@if [ -n "$(CPP_SOURCE_FILES)" ]; then \
 		$(CLANG_TIDY) -p build/$(LINT_PRESET) --warnings-as-errors='*' $(CPP_SOURCE_FILES); \
 	else \
-		echo "OK"; \
+		echo "OK (no source files to lint)"; \
 	fi
 
 lint-staged:
-	@if [ -n "$(STAGED_CPP_FILES)" ]; then \
-		$(CLANG_FORMAT) --dry-run --Werror $(STAGED_CPP_FILES); \
+	@STAGED=$$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null | grep -E '$(CPP_EXT_REGEX)' || true); \
+	if [ -n "$$STAGED" ]; then \
+		$(CLANG_FORMAT) --dry-run --Werror $$STAGED; \
 		if [ ! -f "build/$(LINT_PRESET)/compile_commands.json" ]; then \
 			echo "Generating compile_commands.json for linting..."; \
 			cmake --preset $(LINT_PRESET); \
 		fi; \
-		STAGED_SRC=$$(echo "$(STAGED_CPP_FILES)" | tr ' ' '\n' | grep -E '\.($(subst $(eval) ,|,$(SRC_EXTS)))$$' || true); \
+		STAGED_SRC=$$(echo "$$STAGED" | tr ' ' '\n' | grep -E '\.($(subst $(eval) ,|,$(SRC_EXTS)))$$' || true); \
 		if [ -n "$$STAGED_SRC" ]; then \
 			$(CLANG_TIDY) -p build/$(LINT_PRESET) --warnings-as-errors='*' $$STAGED_SRC; \
 		fi; \
