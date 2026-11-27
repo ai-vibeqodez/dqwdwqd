@@ -13,7 +13,7 @@ STAGED_CPP_FILES := $(shell git diff --cached --name-only --diff-filter=ACMR 2>/
 
 CMAKE_INSTALL_CONFIG := $(if $(findstring debug,$(PRESET)),Debug,Release)
 
-.PHONY: help format format-staged lint lint-staged build test asan tsan clean
+.PHONY: help format format-staged lint lint-staged build test asan tsan coverage clean
 
 help:
 	@echo "Reusable Makefile (v$(VERSION), default PRESET=$(PRESET))"
@@ -28,6 +28,7 @@ help:
 	@echo "  make test           Run ctest suite (uses PRESET)"
 	@echo "  make asan           Build and run tests with ASan + UBSan (gcc-15-asan)"
 	@echo "  make tsan           Build and run tests with TSan (gcc-15-tsan)"
+	@echo "  make coverage       Build, test, and generate coverage report (gcc-15-debug)"
 	@echo "  make clean          Remove build/ and dist/ directories"
 	@echo ""
 	@echo "Presets:"
@@ -89,6 +90,23 @@ tsan:
 		setarch $$(uname -m) -R $(MAKE) test PRESET=gcc-15-tsan; \
 	else \
 		$(MAKE) test PRESET=gcc-15-tsan; \
+	fi
+
+coverage:
+	$(MAKE) build PRESET=gcc-15-debug
+	$(MAKE) test PRESET=gcc-15-debug
+	@if command -v gcovr >/dev/null 2>&1; then \
+		mkdir -p htmlcov; \
+		FILTER_ARGS=""; \
+		if [ -n "$(GCOVR_FILTER)" ]; then \
+			FILTER_ARGS="--filter $(GCOVR_FILTER)"; \
+		fi; \
+		EXCLUDE_ARGS="--exclude $(GCOVR_EXCLUDE)"; \
+		gcovr -r . build/gcc-15-debug $$FILTER_ARGS $$EXCLUDE_ARGS --exclude-unreachable-branches --exclude-throw-branches --print-summary --xml coverage.xml --html-details htmlcov/index.html; \
+		echo "✓ Coverage report: htmlcov/index.html"; \
+	else \
+		echo "ERROR: gcovr not found"; \
+		exit 1; \
 	fi
 
 clean:

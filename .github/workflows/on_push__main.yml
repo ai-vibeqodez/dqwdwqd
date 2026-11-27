@@ -29,9 +29,6 @@ jobs:
   coverage:
     uses: ai-vibeqodez/dqwdwqd/.github/workflows/reusable__common__coverage_cpp23.yml@main
     with:
-      stub: false
       min_coverage: 80
       deploy_pages: true
       deploy_badge: true
-      source_filter: ''
-      exclude: '_deps/*'

@@ -19,9 +19,6 @@ jobs:
   test__common__render_svg_badge_pure:
     uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__common__render_svg_badge_pure.yml@main
 
-  test__common__generate_coverage_cpp23_io:
-    uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__common__generate_coverage_cpp23_io.yml@main
-
   test__release__checksums_pure:
     uses: ai-vibeqodez/dqwdwqd/.github/workflows/test__release__checksums_pure.yml@main
 
