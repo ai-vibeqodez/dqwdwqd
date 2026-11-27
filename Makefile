@@ -32,7 +32,7 @@ help:
 	@echo "  make clean          Remove build/ and dist/ directories"
 	@echo ""
 	@echo "Presets:"
-	@echo "  gcc-15-debug | gcc-15-release | gcc-15-asan | gcc-15-tsan"
+	@echo "  gcc-15-debug | gcc-15-coverage | gcc-15-release | gcc-15-asan | gcc-15-tsan"
 	@echo "  clang18-libcxx-debug | clang18-libcxx-release"
 	@echo "  clang18-libstdcxx-debug | clang18-libstdcxx-release"
 	@echo "  msvc-debug | msvc-release"
@@ -93,16 +93,19 @@ tsan:
 	fi
 
 coverage:
-	$(MAKE) build PRESET=gcc-15-debug
-	$(MAKE) test PRESET=gcc-15-debug
+	$(MAKE) build PRESET=gcc-15-coverage
+	$(MAKE) test PRESET=gcc-15-coverage
 	@if command -v gcovr >/dev/null 2>&1; then \
 		mkdir -p htmlcov; \
 		FILTER_ARGS=""; \
 		if [ -n "$(GCOVR_FILTER)" ]; then \
 			FILTER_ARGS="--filter $(GCOVR_FILTER)"; \
 		fi; \
-		EXCLUDE_ARGS="--exclude $(GCOVR_EXCLUDE)"; \
-		gcovr -r . build/gcc-15-debug $$FILTER_ARGS $$EXCLUDE_ARGS --exclude-unreachable-branches --exclude-throw-branches --print-summary --xml coverage.xml --html-details htmlcov/index.html; \
+		EXCLUDE_ARGS="--exclude _deps"; \
+		if [ -n "$(GCOVR_EXCLUDE)" ]; then \
+			EXCLUDE_ARGS="$$EXCLUDE_ARGS --exclude $(GCOVR_EXCLUDE)"; \
+		fi; \
+		gcovr -r . build/gcc-15-coverage $$FILTER_ARGS $$EXCLUDE_ARGS --gcov-ignore-errors=no_working_dir_found --exclude-unreachable-branches --exclude-throw-branches --print-summary --xml coverage.xml --html-details htmlcov/index.html; \
 		echo "✓ Coverage report: htmlcov/index.html"; \
 	else \
 		echo "ERROR: gcovr not found"; \

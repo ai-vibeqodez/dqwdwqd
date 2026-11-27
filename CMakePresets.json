@@ -42,7 +42,11 @@
     },
     {
       "name": "gcc-15-debug",
-      "inherits": ["gcc-15-base", "cfg-debug"],
+      "inherits": ["gcc-15-base", "cfg-debug"]
+    },
+    {
+      "name": "gcc-15-coverage",
+      "inherits": "gcc-15-debug",
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "-O0 -g --coverage",
         "CMAKE_EXE_LINKER_FLAGS": "--coverage"
@@ -54,7 +58,7 @@
     },
     {
       "name": "gcc-15-asan",
-      "inherits": ["gcc-15-base", "cfg-debug"],
+      "inherits": "gcc-15-debug",
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "-O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined",
         "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined"
@@ -62,7 +66,7 @@
     },
     {
       "name": "gcc-15-tsan",
-      "inherits": ["gcc-15-base", "cfg-debug"],
+      "inherits": "gcc-15-debug",
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "-O1 -g -fno-omit-frame-pointer -fsanitize=thread",
         "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=thread"
@@ -132,6 +136,7 @@
   ],
   "buildPresets": [
     { "name": "gcc-15-debug", "configurePreset": "gcc-15-debug" },
+    { "name": "gcc-15-coverage", "configurePreset": "gcc-15-coverage" },
     { "name": "gcc-15-release", "configurePreset": "gcc-15-release" },
     { "name": "gcc-15-asan", "configurePreset": "gcc-15-asan" },
     { "name": "gcc-15-tsan", "configurePreset": "gcc-15-tsan" },
@@ -149,6 +154,7 @@
       "output": { "outputOnFailure": true }
     },
     { "name": "gcc-15-debug", "inherits": "test-base", "configurePreset": "gcc-15-debug" },
+    { "name": "gcc-15-coverage", "inherits": "test-base", "configurePreset": "gcc-15-coverage" },
     { "name": "gcc-15-release", "inherits": "test-base", "configurePreset": "gcc-15-release" },
     {
       "name": "gcc-15-asan",

@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-24.04
     container: ghcr.io/ai-warevo/ci-cpp23:gcc-15
     env:
-      PRESET: gcc-15-debug
+      PRESET: gcc-15-coverage
 
     steps:
       - uses: actions/checkout@v4
