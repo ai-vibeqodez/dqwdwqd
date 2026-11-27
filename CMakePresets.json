@@ -12,7 +12,9 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "APP_ENABLE_WARNINGS": "ON",
+        "APP_WARNINGS_AS_ERRORS": "ON"
       }
     },
 
@@ -36,7 +38,6 @@
       "hidden": true,
       "inherits": "base",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc-15",
         "CMAKE_CXX_COMPILER": "g++-15"
       }
     },
@@ -78,7 +79,6 @@
       "hidden": true,
       "inherits": "base",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang-18",
         "CMAKE_CXX_COMPILER": "clang++-18"
       }
     },

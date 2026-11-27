@@ -1,6 +1,8 @@
 VERSION ?= 0.0.1
 PRESET  ?= msvc-debug
 
+COVERAGE_PRESET ?= gcc-15-coverage
+
 CLANG_FORMAT ?= clang-format-18
 CLANG_TIDY   ?= clang-tidy-18
 
@@ -28,7 +30,7 @@ help:
 	@echo "  make test           Run ctest suite (uses PRESET)"
 	@echo "  make asan           Build and run tests with ASan + UBSan (gcc-15-asan)"
 	@echo "  make tsan           Build and run tests with TSan (gcc-15-tsan)"
-	@echo "  make coverage       Build, test, and generate coverage report (gcc-15-debug)"
+	@echo "  make coverage       Build, test, and generate coverage report ($(COVERAGE_PRESET))"
 	@echo "  make clean          Remove build/ and dist/ directories"
 	@echo ""
 	@echo "Presets:"
@@ -93,8 +95,8 @@ tsan:
 	fi
 
 coverage:
-	$(MAKE) build PRESET=gcc-15-coverage
-	$(MAKE) test PRESET=gcc-15-coverage
+	$(MAKE) build PRESET=$(COVERAGE_PRESET)
+	$(MAKE) test PRESET=$(COVERAGE_PRESET)
 	@if command -v gcovr >/dev/null 2>&1; then \
 		mkdir -p htmlcov; \
 		FILTER_ARGS=""; \
@@ -105,7 +107,7 @@ coverage:
 		if [ -n "$(GCOVR_EXCLUDE)" ]; then \
 			EXCLUDE_ARGS="$$EXCLUDE_ARGS --exclude $(GCOVR_EXCLUDE)"; \
 		fi; \
-		gcovr -r . build/gcc-15-coverage $$FILTER_ARGS $$EXCLUDE_ARGS --gcov-ignore-errors=no_working_dir_found --exclude-unreachable-branches --exclude-throw-branches --print-summary --xml coverage.xml --html-details htmlcov/index.html; \
+		gcovr -r . build/$(COVERAGE_PRESET) $$FILTER_ARGS $$EXCLUDE_ARGS --gcov-ignore-errors=no_working_dir_found --exclude-unreachable-branches --exclude-throw-branches --print-summary --xml coverage.xml --html-details htmlcov/index.html; \
 		echo "✓ Coverage report: htmlcov/index.html"; \
 	else \
 		echo "ERROR: gcovr not found"; \
